@@ -27,11 +27,42 @@ backend/
   utils/
     indicators.py
 ml/
-  train_model.py
+  build_dataset.py
+  full_pipeline.py
+  predict_signal.py
   predict.py
+  test_signals.py
+  train_classifier.py
+  train_model.py
+  data/
+    dataset.csv
+  models/
+    classifier.pkl
+    lstm_model.h5
+    scaler.pkl
+  outputs/
+    metrics/
+      classifier_metrics.json
+      metrics.json
+    plots/
+      confusion_matrix.png
+      feature_importance.png
+    test_results/
+      signals.csv
+      signals.json
 models/
   lstm_model.h5
   scaler.pkl
+outputs/
+  run_20260325_135830/
+    logs/
+      training_log.txt
+    metrics/
+      metrics.json
+    models/
+      best_model.h5
+      lstm_model.h5
+    plots/
 requirements.txt
 README.md
 ```
@@ -104,4 +135,30 @@ python ml/train_classifier.py
 - model saved to `ml/models/classifier.pkl`
 - metrics saved to `ml/outputs/metrics/classifier_metrics.json`
 - improves BUY/SELL recall and overall accuracy
+
+## Signal Testing
+
+- `ml/test_signals.py`: Tests ML signal distribution across multiple stocks
+- Fetches last 3 months data, computes indicators, predicts signals
+- Saves results to `ml/outputs/test_results/signals.json` and `signals.csv`
+- Prints distribution summary and table
+
+Run:
+
+```bash
+python ml/test_signals.py
+```
+
+Example output:
+```
+Signal Distribution:
+BUY: 12.5%
+SELL: 25.0%
+WATCH: 62.5%
+
+Symbol | Signal | Confidence
+TCS.NS | SELL | 0.62
+INFY.NS | WATCH | 0.49
+...
+```
 

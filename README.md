@@ -86,3 +86,22 @@ source venv/Scripts/activate && uvicorn backend.main:app --reload
 - caching TTL for stock_data = 60s
 - alert dedupe TTL = 1h
 - this is a PoC for backend behavior; model accuracy requires longer training and proper validation
+
+## New ML pipeline (XGBoost signal classifier)
+
+Added scripts:
+- `ml/build_dataset.py` (multi-symbol dataset + engineering + labeling)
+- `ml/train_classifier.py` (XGB classifier, thresholded BUY/SELL/WATCH, metrics output)
+
+Run:
+
+```bash
+source venv/Scripts/activate
+python ml/build_dataset.py
+python ml/train_classifier.py
+```
+
+- model saved to `ml/models/classifier.pkl`
+- metrics saved to `ml/outputs/metrics/classifier_metrics.json`
+- improves BUY/SELL recall and overall accuracy
+

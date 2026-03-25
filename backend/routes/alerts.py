@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.alerts_service import generate_alerts
+from backend.services.alerts_service import generate_alerts
 
 router = APIRouter()
 

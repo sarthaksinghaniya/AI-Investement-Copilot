@@ -58,8 +58,8 @@ python ml/train_model.py
 ```bash
 cd backend
 uvicorn main:app --reload
+source venv/Scripts/activate && uvicorn backend.main:app --reload
 ```
-
 
 ## Endpoints
 

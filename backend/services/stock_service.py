@@ -2,8 +2,9 @@ import yfinance as yf
 import pandas as pd
 import datetime
 import asyncio
-from utils.indicators import calculate_sma, calculate_ema
-from services.signal_engine import generate_signal
+from backend.utils.indicators import calculate_sma, calculate_ema
+from backend.services.signal_engine import generate_signal
+from ml.predict import predict_prices
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,13 @@ async def fetch_stock_data(symbol: str) -> dict:
     }
 
     signal_data = generate_signal(latest_hist)
+    prediction_data = {}
+
+    try:
+        prediction_data = predict_prices(symbol)
+    except Exception as exc:
+        logger.warning('Prediction unavailable for %s: %s', symbol, exc)
+        prediction_data = {'predictions': [], 'trend': 'SIDEWAYS', 'confidence': 0.0}
 
     response = {
         'symbol': symbol,
@@ -85,6 +93,11 @@ async def fetch_stock_data(symbol: str) -> dict:
         'signal': signal_data.get('signal'),
         'confidence': signal_data.get('confidence'),
         'reasoning': signal_data.get('reasoning'),
+        'prediction': {
+            'next_7_days': prediction_data.get('predictions', []),
+            'trend': prediction_data.get('trend', 'SIDEWAYS'),
+            'confidence': prediction_data.get('confidence', 0.0),
+        },
     }
 
     async with CACHE_LOCK:

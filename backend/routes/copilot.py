@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.copilot_service import generate_copilot_reply
+from backend.services.copilot_service import generate_copilot_reply
 from pydantic import BaseModel
 
 router = APIRouter()

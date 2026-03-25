@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.stock_service import fetch_stock_data
+from backend.services.stock_service import fetch_stock_data
 from fastapi import status
 from pydantic import BaseModel
 

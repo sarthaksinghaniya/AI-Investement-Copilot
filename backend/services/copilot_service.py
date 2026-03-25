@@ -1,5 +1,5 @@
 import re
-from services.stock_service import fetch_stock_data
+from backend.services.stock_service import fetch_stock_data
 import logging
 
 logger = logging.getLogger(__name__)

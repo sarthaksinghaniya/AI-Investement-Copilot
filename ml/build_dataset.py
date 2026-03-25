@@ -1,16 +1,43 @@
 import os
-from typing import Tuple
+from typing import List
 
+import numpy as np
 import pandas as pd
 import yfinance as yf
 
+SYMBOLS = [
+    "TCS.NS",
+    "INFY.NS",
+    "RELIANCE.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "SBIN.NS",
+    "LT.NS",
+    "ITC.NS",
+]
 
-def fetch_stock_data(symbol: str = "TCS.NS", period: str = "2y", interval: str = "1d") -> pd.DataFrame:
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(period=period, interval=interval, auto_adjust=False)
-    if df.empty:
-        raise ValueError(f"No data returned for symbol {symbol}")
-    return df
+
+def fetch_all_data(symbols: List[str] = SYMBOLS, period: str = "3y", interval: str = "1d") -> pd.DataFrame:
+    frames = []
+    for symbol in symbols:
+        ticker = yf.Ticker(symbol)
+        df = ticker.history(period=period, interval=interval, auto_adjust=False)
+        if df.empty:
+            print(f"Warning: no data for {symbol}")
+            continue
+
+        df = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
+        df['symbol'] = symbol
+        df['date'] = df.index
+        frames.append(df)
+
+    if not frames:
+        raise RuntimeError('No data fetched for any symbol.')
+
+    combined = pd.concat(frames, ignore_index=True)
+    combined.sort_values(['symbol', 'date'], inplace=True)
+    combined.reset_index(drop=True, inplace=True)
+    return combined
 
 
 def calculate_rsi(close: pd.Series, period: int = 14) -> pd.Series:
@@ -27,57 +54,54 @@ def calculate_rsi(close: pd.Series, period: int = 14) -> pd.Series:
 
 
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
+    output_frames = []
+    for symbol, group in df.groupby('symbol'):
+        g = group.copy()
+        g['RSI'] = calculate_rsi(g['Close'], period=14)
+        g['EMA_10'] = g['Close'].ewm(span=10, adjust=False).mean()
+        g['EMA_20'] = g['Close'].ewm(span=20, adjust=False).mean()
+        g['SMA_50'] = g['Close'].rolling(window=50, min_periods=50).mean()
+        g['returns'] = g['Close'].pct_change()
+        g['volume_change'] = g['Volume'].pct_change()
+        g['volatility'] = g['returns'].rolling(window=10, min_periods=10).std()
+        g['momentum'] = g['Close'] - g['Close'].shift(10)
+        g['future_return'] = (g['Close'].shift(-7) - g['Close']) / g['Close']
+        output_frames.append(g)
+
+    combined = pd.concat(output_frames, ignore_index=True)
+    return combined
+
+
+def create_labels(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    df["RSI"] = calculate_rsi(df["Close"], period=14)
-    df["EMA_10"] = df["Close"].ewm(span=10, adjust=False).mean()
-    df["EMA_20"] = df["Close"].ewm(span=20, adjust=False).mean()
-    df["SMA_50"] = df["Close"].rolling(window=50, min_periods=50).mean()
-    df["volume_change"] = df["Volume"].pct_change() * 100
-    df["returns"] = df["Close"].pct_change() * 100
+    df['label'] = 'WATCH'
+    df.loc[df['future_return'] > 0.03, 'label'] = 'BUY'
+    df.loc[df['future_return'] < -0.03, 'label'] = 'SELL'
     return df
 
 
-def create_labels(df: pd.DataFrame, horizon: int = 5, up_th: float = 0.02, down_th: float = -0.02) -> pd.DataFrame:
-    df = df.copy()
-    df["future_close"] = df["Close"].shift(-horizon)
-    df["future_return"] = (df["future_close"] - df["Close"]) / df["Close"]
-
-    conditions = [
-        df["future_return"] > up_th,
-        df["future_return"] < down_th,
-    ]
-    choices = ["BUY", "SELL"]
-    df["label"] = pd.Series(pd.Categorical(pd.cut(df["future_return"], bins=[-float("inf"), down_th, up_th, float("inf")], labels=["SELL", "WATCH", "BUY"])))
-
-    # overwrite with explicit values if intervals were not clear
-    df.loc[df["future_return"] > up_th, "label"] = "BUY"
-    df.loc[df["future_return"] < down_th, "label"] = "SELL"
-    df.loc[(df["future_return"] <= up_th) & (df["future_return"] >= down_th), "label"] = "WATCH"
-
-    return df
-
-
-def _ensure_data_dir(path: str) -> None:
-    os.makedirs(path, exist_ok=True)
-
-
-def build_dataset(symbol: str = "TCS.NS", period: str = "2y", output_path: str = "ml/data/dataset.csv") -> pd.DataFrame:
-    df = fetch_stock_data(symbol=symbol, period=period)
-    df = compute_features(df)
-    df = create_labels(df)
-
-    keep_cols = ["RSI", "EMA_10", "EMA_20", "SMA_50", "volume_change", "returns", "label"]
-    df = df[keep_cols]
-
-    # remove non-finite values introduced by pct_change or division by zero
-    df = df.replace([float('inf'), -float('inf')], float('nan'))
-    df = df.dropna()
-
-    _ensure_data_dir(os.path.dirname(output_path))
+def save_dataset(df: pd.DataFrame, output_path: str = 'ml/data/dataset.csv') -> None:
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df.to_csv(output_path, index=False)
-    return df
 
 
-if __name__ == "__main__":
+def build_dataset(symbols: List[str] = SYMBOLS, period: str = '3y') -> pd.DataFrame:
+    raw = fetch_all_data(symbols=symbols, period=period)
+    features = compute_features(raw)
+    labeled = create_labels(features)
+
+    keep_cols = [
+        'symbol', 'date', 'RSI', 'EMA_10', 'EMA_20', 'SMA_50',
+        'returns', 'volume_change', 'volatility', 'momentum', 'future_return', 'label'
+    ]
+
+    dataset = labeled[keep_cols].replace([np.inf, -np.inf], np.nan).dropna().reset_index(drop=True)
+
+    print(f'Dataset size: {len(dataset)} rows')
+    save_dataset(dataset)
+    return dataset
+
+
+if __name__ == '__main__':
     dataset = build_dataset()
-    print(f"Dataset built with {len(dataset)} rows. Saved to ml/data/dataset.csv")
+    print(f'Dataset built with {len(dataset)} rows. Saved to ml/data/dataset.csv')

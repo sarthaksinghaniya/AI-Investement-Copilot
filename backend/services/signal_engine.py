@@ -1,3 +1,39 @@
+feature_importance_order = [
+    "SMA_50",
+    "EMA_20",
+    "EMA_10",
+    "volatility",
+    "momentum",
+    "RSI",
+    "volume_change",
+    "returns"
+]
+
+def generate_reason(indicators: dict, signal: str):
+    reasons = []
+    # Trend logic
+    if indicators.get("ema_10") is not None and indicators.get("ema_20") is not None:
+        if indicators.get("ema_10") > indicators.get("ema_20"):
+            reasons.append("short-term uptrend detected")
+        else:
+            reasons.append("weak or downward trend")
+    # RSI logic
+    rsi = indicators.get("rsi")
+    if rsi is not None:
+        if rsi < 30:
+            reasons.append("RSI indicates oversold (potential reversal)")
+        elif rsi > 70:
+            reasons.append("RSI indicates overbought conditions")
+    # Momentum
+    if indicators.get("momentum") is not None:
+        if indicators.get("momentum", 0) > 0:
+            reasons.append("positive momentum observed")
+        else:
+            reasons.append("low or negative momentum")
+    return ", ".join(reasons)
+
+def get_top_factors(indicators: dict):
+    return feature_importance_order[:3]
 import pandas as pd
 
 from ml.predict_signal import predict_signal
@@ -92,19 +128,26 @@ def generate_signal(indicators: dict):
         }
 
         result = predict_signal(features)
-
+        reason = generate_reason(indicators, result["signal"])
+        top_factors = get_top_factors(indicators)
         return {
             "type": result["signal"],
             "confidence": result["confidence"],
             "probabilities": result["probabilities"],
+            "reason": reason,
+            "top_factors": top_factors,
             "source": "ml_model"
         }
 
     except Exception as e:
         # fallback to rule-based logic
+        reason = generate_reason(indicators, "WATCH")
+        top_factors = get_top_factors(indicators)
         return {
             "type": "WATCH",
             "confidence": 0.5,
-            "reason": "fallback due to error",
+            "probabilities": {"buy": 0.0, "sell": 0.0, "watch": 1.0},
+            "reason": reason or "fallback due to error",
+            "top_factors": top_factors,
             "source": "fallback"
         }

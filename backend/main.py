@@ -10,9 +10,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title='AI Stock Advisor API', version='1.0.0')
 
 from routes.copilot import router as copilot_router
+from routes.alerts import router as alerts_router
 
 app.include_router(stock_router, prefix='')
 app.include_router(copilot_router, prefix='')
+app.include_router(alerts_router, prefix='')
 
 
 @app.exception_handler(RequestValidationError)

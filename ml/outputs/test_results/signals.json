@@ -1,0 +1,66 @@
+[
+  {
+    "symbol": "TCS.NS",
+    "signal": "SELL",
+    "confidence": 0.6175468564033508,
+    "buy_prob": 0.24298371374607086,
+    "sell_prob": 0.6175468564033508,
+    "watch_prob": 0.1394694447517395
+  },
+  {
+    "symbol": "INFY.NS",
+    "signal": "WATCH",
+    "confidence": 0.48939087986946106,
+    "buy_prob": 0.31533896923065186,
+    "sell_prob": 0.1952700912952423,
+    "watch_prob": 0.48939087986946106
+  },
+  {
+    "symbol": "RELIANCE.NS",
+    "signal": "WATCH",
+    "confidence": 0.46707040071487427,
+    "buy_prob": 0.25945207476615906,
+    "sell_prob": 0.2734775245189667,
+    "watch_prob": 0.46707040071487427
+  },
+  {
+    "symbol": "HDFCBANK.NS",
+    "signal": "WATCH",
+    "confidence": 0.46582865715026855,
+    "buy_prob": 0.25969505310058594,
+    "sell_prob": 0.2744762599468231,
+    "watch_prob": 0.46582865715026855
+  },
+  {
+    "symbol": "ICICIBANK.NS",
+    "signal": "WATCH",
+    "confidence": 0.5228318572044373,
+    "buy_prob": 0.11675731837749481,
+    "sell_prob": 0.36041080951690674,
+    "watch_prob": 0.5228318572044373
+  },
+  {
+    "symbol": "SBIN.NS",
+    "signal": "BUY",
+    "confidence": 0.47964173555374146,
+    "buy_prob": 0.47964173555374146,
+    "sell_prob": 0.2410743534564972,
+    "watch_prob": 0.27928397059440613
+  },
+  {
+    "symbol": "LT.NS",
+    "signal": "WATCH",
+    "confidence": 0.4561602771282196,
+    "buy_prob": 0.16723963618278503,
+    "sell_prob": 0.37660011649131775,
+    "watch_prob": 0.4561602771282196
+  },
+  {
+    "symbol": "ITC.NS",
+    "signal": "SELL",
+    "confidence": 0.5119394063949585,
+    "buy_prob": 0.07349707931280136,
+    "sell_prob": 0.5119394063949585,
+    "watch_prob": 0.4145635664463043
+  }
+]

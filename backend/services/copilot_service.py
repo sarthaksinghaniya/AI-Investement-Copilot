@@ -53,29 +53,91 @@ async def generate_copilot_reply(query: str) -> dict:
             'details': None,
         }
 
-    signal = stock_data.get('signal')
-    confidence = stock_data.get('confidence')
-    reasoning = stock_data.get('reasoning', [])
+    # Extract ML signal and indicators
+    signal_data = stock_data.get('signal', {})
+    indicators = stock_data.get('indicators', {})
+    signal = signal_data.get('type', 'WATCH')
+    confidence = signal_data.get('confidence', 0.0)
+    probabilities = signal_data.get('probabilities', {})
+    source = signal_data.get('source', 'ml_model')
 
-    base_answer = f"{symbol.split('.')[0]} shows a {signal} signal with {confidence}% confidence."
+    # Feature importance (static order for now)
+    feature_importance = [
+        ('SMA_50', 0.17),
+        ('EMA_20', 0.16),
+        ('EMA_10', 0.14),
+        ('volatility', 0.13),
+        ('momentum', 0.12),
+        ('RSI', 0.11),
+        ('volume_change', 0.09),
+        ('returns', 0.09),
+    ]
+    top_features = [f for f, _ in feature_importance[:3]]
+    top_feat_str = ', '.join(top_features)
 
+    # Reasoning layer
+    rsi = indicators.get('rsi') or indicators.get('RSI')
+    ema_10 = indicators.get('ema_10') or indicators.get('EMA_10')
+    ema_20 = indicators.get('ema_20') or indicators.get('EMA_20')
+    sma_50 = indicators.get('sma_50') or indicators.get('SMA_50')
+    momentum = indicators.get('momentum')
+    volatility = indicators.get('volatility')
+
+    reasoning = []
     if signal == 'BUY':
-        tone = 'looks promising right now. The stock is in an oversold zone and showing signs of recovery.'
+        if rsi is not None and rsi < 35:
+            reasoning.append('RSI indicates potential reversal or strength')
+        if ema_10 and ema_20 and ema_10 > ema_20:
+            reasoning.append('Short-term EMA above long-term EMA (bullish)')
+        if sma_50 and ema_20 and sma_50 > ema_20:
+            reasoning.append('SMA_50 above EMA_20 (uptrend)')
+        if momentum and momentum > 0:
+            reasoning.append('Positive momentum detected')
+        if volatility and volatility < 0.03:
+            reasoning.append('Low volatility, stable uptrend')
     elif signal == 'SELL':
-        tone = 'may be weakening. The stock is overbought and appears to be entering a downtrend.'
+        if rsi is not None and rsi > 65:
+            reasoning.append('RSI indicates overbought/weakness')
+        if ema_10 and ema_20 and ema_10 < ema_20:
+            reasoning.append('Short-term EMA below long-term EMA (bearish)')
+        if sma_50 and ema_20 and sma_50 < ema_20:
+            reasoning.append('SMA_50 below EMA_20 (downtrend)')
+        if momentum and momentum < 0:
+            reasoning.append('Negative momentum detected')
+        if volatility and volatility > 0.04:
+            reasoning.append('High volatility, unstable trend')
     else:
-        tone = 'is worth watching closely. The market conditions are mixed, so stay cautious.'
+        reasoning.append('No strong trend or signal detected')
 
-    conversational = (
-        f"{symbol.split('.')[0]} {tone} "
-        "However, consider market risks before investing."
-    )
+    # Compose human-like response
+    if signal == 'BUY':
+        response = (
+            f"Based on current market indicators, {symbol} shows a bullish signal.\n"
+            f"- Confidence: {confidence:.2f}\n"
+            f"- Top indicators: {top_feat_str}\n"
+            + ''.join([f"- {r}\n" for r in reasoning]) +
+            "Recommendation: Consider buying, but monitor price action."
+        )
+    elif signal == 'SELL':
+        response = (
+            f"{symbol} is showing bearish signals.\n"
+            f"- Confidence: {confidence:.2f}\n"
+            f"- Top indicators: {top_feat_str}\n"
+            + ''.join([f"- {r}\n" for r in reasoning]) +
+            "Recommendation: Consider selling or avoiding entry."
+        )
+    else:
+        response = (
+            f"{symbol} is currently in a neutral zone.\n"
+            f"- Confidence: {confidence:.2f}\n"
+            f"- Top indicators: {top_feat_str}\n"
+            + ''.join([f"- {r}\n" for r in reasoning]) +
+            "Recommendation: Wait for a clearer opportunity."
+        )
 
     return {
-        'answer': f"{base_answer} {conversational}",
-        'details': {
-            'signal': signal,
-            'confidence': confidence,
-            'reasoning': reasoning,
-        },
+        "symbol": symbol,
+        "signal": signal,
+        "confidence": confidence,
+        "response": response.strip(),
     }

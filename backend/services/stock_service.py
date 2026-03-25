@@ -71,12 +71,30 @@ async def fetch_stock_data(symbol: str) -> dict:
             'EMA_20': None if pd.isna(row['EMA_20']) else float(row['EMA_20']),
         })
 
-    indicators = {
-        'SMA_20': None if pd.isna(latest_hist['SMA_20'].iloc[-1]) else float(latest_hist['SMA_20'].iloc[-1]),
-        'EMA_20': None if pd.isna(latest_hist['EMA_20'].iloc[-1]) else float(latest_hist['EMA_20'].iloc[-1]),
-    }
 
-    signal_data = generate_signal(latest_hist)
+    # Compute all required indicators for ML model
+    indicators = {
+        'rsi': None, 'ema_10': None, 'ema_20': None, 'sma_50': None, 'returns': None,
+        'volume_change': None, 'volatility': None, 'momentum': None,
+        'SMA_20': None, 'EMA_20': None
+    }
+    # Calculate indicators from latest_hist
+    if 'Close' in latest_hist:
+        close = latest_hist['Close']
+        indicators['rsi'] = float(close.diff().clip(lower=0).rolling(14).mean().iloc[-1]) if len(close) >= 14 else None
+        indicators['ema_10'] = float(close.ewm(span=10, adjust=False).mean().iloc[-1])
+        indicators['ema_20'] = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+        indicators['sma_50'] = float(close.rolling(window=50).mean().iloc[-1]) if len(close) >= 50 else None
+        indicators['returns'] = float(close.pct_change().iloc[-1])
+        indicators['volatility'] = float(close.pct_change().rolling(window=10).std().iloc[-1]) if len(close) >= 10 else None
+        indicators['momentum'] = float(close.iloc[-1] - close.iloc[-11]) if len(close) >= 11 else None
+    if 'Volume' in latest_hist:
+        volume = latest_hist['Volume']
+        indicators['volume_change'] = float(volume.pct_change().iloc[-1])
+    indicators['SMA_20'] = None if pd.isna(latest_hist['SMA_20'].iloc[-1]) else float(latest_hist['SMA_20'].iloc[-1])
+    indicators['EMA_20'] = None if pd.isna(latest_hist['EMA_20'].iloc[-1]) else float(latest_hist['EMA_20'].iloc[-1])
+
+    signal_data = generate_signal(indicators)
     prediction_data = {}
 
     try:
@@ -90,11 +108,7 @@ async def fetch_stock_data(symbol: str) -> dict:
         'latest_price': latest_price,
         'historical_data': historical_data_list,
         'indicators': indicators,
-        'signal': {
-            'type': signal_data.get('signal'),
-            'confidence': float(signal_data.get('confidence', 0.0)),
-            'reason': signal_data.get('reason', 'based on ML model + indicators') if signal_data.get('reason') else 'based on ML model + indicators',
-        },
+        'signal': signal_data,
         'prediction': {
             'next_7_days': prediction_data.get('predictions', []),
             'trend': prediction_data.get('trend', 'SIDEWAYS'),

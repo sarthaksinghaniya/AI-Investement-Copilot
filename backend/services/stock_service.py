@@ -1,10 +1,16 @@
 import yfinance as yf
 import pandas as pd
+import datetime
+import asyncio
 from utils.indicators import calculate_sma, calculate_ema
 from services.signal_engine import generate_signal
 import logging
 
 logger = logging.getLogger(__name__)
+
+CACHE: dict[str, dict] = {}
+CACHE_TTL_SECONDS = 60
+CACHE_LOCK = asyncio.Lock()
 
 
 async def fetch_stock_data(symbol: str) -> dict:
@@ -12,6 +18,16 @@ async def fetch_stock_data(symbol: str) -> dict:
     if not symbol or not isinstance(symbol, str):
         logger.error('Invalid symbol received: %s', symbol)
         raise ValueError('Symbol must be a non-empty string.')
+
+    now = datetime.datetime.utcnow()
+    async with CACHE_LOCK:
+        cached = CACHE.get(symbol)
+        if cached:
+            age = (now - cached['timestamp']).total_seconds()
+            if age < CACHE_TTL_SECONDS:
+                logger.info('Cache hit for %s (%ss old)', symbol, int(age))
+                return cached['data']
+            logger.info('Cache expired for %s (%ss old)', symbol, int(age))
 
     # yfinance run in sync; keep CPU-bound call outside of event loop in production
     ticker = yf.Ticker(symbol)
@@ -61,7 +77,7 @@ async def fetch_stock_data(symbol: str) -> dict:
 
     signal_data = generate_signal(latest_hist)
 
-    return {
+    response = {
         'symbol': symbol,
         'latest_price': latest_price,
         'historical_data': historical_data_list,
@@ -70,3 +86,11 @@ async def fetch_stock_data(symbol: str) -> dict:
         'confidence': signal_data.get('confidence'),
         'reasoning': signal_data.get('reasoning'),
     }
+
+    async with CACHE_LOCK:
+        CACHE[symbol] = {
+            'data': response,
+            'timestamp': now,
+        }
+
+    return response

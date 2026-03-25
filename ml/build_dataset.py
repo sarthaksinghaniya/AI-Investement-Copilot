@@ -68,6 +68,9 @@ def build_dataset(symbol: str = "TCS.NS", period: str = "2y", output_path: str =
 
     keep_cols = ["RSI", "EMA_10", "EMA_20", "SMA_50", "volume_change", "returns", "label"]
     df = df[keep_cols]
+
+    # remove non-finite values introduced by pct_change or division by zero
+    df = df.replace([float('inf'), -float('inf')], float('nan'))
     df = df.dropna()
 
     _ensure_data_dir(os.path.dirname(output_path))

@@ -1,5 +1,7 @@
 import pandas as pd
 
+from ml.predict_signal import predict_signal
+
 
 def calculate_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     """Calculate RSI (Relative Strength Index) for a price series."""
@@ -92,12 +94,39 @@ def generate_signal(df: pd.DataFrame) -> dict:
 
     latest = working.iloc[-1]
 
-    avg_volume = float(working['Volume'].mean())
+    features = {
+        'RSI': float(latest['RSI_14']),
+        'EMA_10': float(latest.get('EMA_10', latest['EMA_20'])),
+        'EMA_20': float(latest['EMA_20']),
+        'SMA_50': float(latest.get('SMA_50', latest.get('SMA_20', latest['Close']))),
+        'volume_change': float(latest.get('volume_change', 0.0)),
+        'returns': float(latest.get('returns', 0.0)),
+    }
 
-    return score_signal(
-        rsi=float(latest['RSI_14']),
-        price=float(latest['Close']),
-        ema=float(latest['EMA_20']),
-        volume=float(latest['Volume']),
-        avg_volume=avg_volume,
-    )
+    try:
+        ml_result = predict_signal(features)
+        signal = ml_result.get('signal', 'WATCH')
+        confidence = float(ml_result.get('confidence', 0.0))
+
+        return {
+            'signal': signal,
+            'confidence': confidence,
+            'reason': 'based on ML model + indicators',
+        }
+
+    except Exception:
+        # fallback to rule-based signal when ML model fails
+        avg_volume = float(working['Volume'].mean())
+        rule = score_signal(
+            rsi=float(latest['RSI_14']),
+            price=float(latest['Close']),
+            ema=float(latest['EMA_20']),
+            volume=float(latest['Volume']),
+            avg_volume=avg_volume,
+        )
+
+        return {
+            'signal': rule['signal'],
+            'confidence': float(rule['confidence']) / 100.0,
+            'reason': 'fallback to rule-based model',
+        }

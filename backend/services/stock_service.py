@@ -90,9 +90,11 @@ async def fetch_stock_data(symbol: str) -> dict:
         'latest_price': latest_price,
         'historical_data': historical_data_list,
         'indicators': indicators,
-        'signal': signal_data.get('signal'),
-        'confidence': signal_data.get('confidence'),
-        'reasoning': signal_data.get('reasoning'),
+        'signal': {
+            'type': signal_data.get('signal'),
+            'confidence': float(signal_data.get('confidence', 0.0)),
+            'reason': signal_data.get('reason', 'based on ML model + indicators') if signal_data.get('reason') else 'based on ML model + indicators',
+        },
         'prediction': {
             'next_7_days': prediction_data.get('predictions', []),
             'trend': prediction_data.get('trend', 'SIDEWAYS'),

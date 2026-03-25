@@ -11,9 +11,8 @@ class StockResponse(BaseModel):
     latest_price: float
     historical_data: list
     indicators: dict
-    signal: str
-    confidence: int
-    reasoning: list
+    signal: dict
+    prediction: dict
 
 
 @router.get('/stock/{symbol}', response_model=StockResponse)

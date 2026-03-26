@@ -5,6 +5,7 @@ import PriceChart from '../components/PriceChart'
 import RSIChart from '../components/RSIChart'
 import ProbabilityBar from '../components/ProbabilityBar'
 import CopilotChat from '../components/CopilotChat'
+import AlertsPanel from '../components/AlertsPanel'
 import { getStock } from '../services/api'
 
 export default function Dashboard() {
@@ -62,10 +63,15 @@ export default function Dashboard() {
         </div>
 
         <aside className="space-y-6">
-          {stock && <ProbabilityBar signal={stock.signal} />}
+          <div className="space-y-4">
+            <AlertsPanel />
+            {stock && <ProbabilityBar signal={stock.signal} />}
+          </div>
 
-          <div className="h-[420px]">
-            <CopilotChat />
+          <div className="h-[420px] mt-4">
+            <div className="card h-full p-0 overflow-hidden">
+              <CopilotChat selectedStock={stock} />
+            </div>
           </div>
         </aside>
       </div>

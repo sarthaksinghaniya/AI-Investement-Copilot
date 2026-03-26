@@ -1,15 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { chatCopilot } from '../services/api'
 
-export default function CopilotChat() {
+export default function CopilotChat({ selectedStock = null }) {
   const [messages, setMessages] = useState([])
   const [query, setQuery] = useState('')
   const [sending, setSending] = useState(false)
   const endRef = useRef(null)
+  const lastContextRef = useRef(null)
 
   useEffect(() => {
     if (endRef.current) endRef.current.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // when selectedStock changes, add a context message for the assistant
+  useEffect(() => {
+    const sym = selectedStock?.symbol ?? selectedStock ?? null
+    if (!sym) return
+    if (lastContextRef.current === sym) return
+    lastContextRef.current = sym
+    const ctxMsg = { role: 'system', text: `Context: selected stock = ${sym}` }
+    setMessages((m) => [...m, ctxMsg])
+  }, [selectedStock])
 
   const send = async (e) => {
     if (e) e.preventDefault()
@@ -22,7 +33,10 @@ export default function CopilotChat() {
     setSending(true)
 
     try {
-      const res = await chatCopilot(trimmed)
+      // include selected stock context in the query payload if available
+      const contextNote = selectedStock?.symbol ? `Context: ${selectedStock.symbol}\n` : ''
+      const payloadQuery = contextNote + trimmed
+      const res = await chatCopilot(payloadQuery)
       const answer = res?.answer ?? JSON.stringify(res)
       setMessages((m) => [...m, { role: 'assistant', text: answer }])
     } catch (err) {
@@ -43,6 +57,9 @@ export default function CopilotChat() {
   return (
     <div className="flex flex-col h-full max-h-[600px] border rounded-lg overflow-hidden">
       <div className="flex-1 p-4 overflow-auto bg-gray-50">
+        {selectedStock && (
+          <div className="mb-3 text-xs text-gray-600 dark:text-gray-300">Context: {selectedStock?.symbol ?? selectedStock}</div>
+        )}
         {messages.length === 0 && (
           <div className="text-sm text-gray-500">Ask the copilot about a stock or strategy.</div>
         )}

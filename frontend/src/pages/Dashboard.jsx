@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SearchBar from '../components/SearchBar'
 import StockCard from '../components/StockCard'
 import PriceChart from '../components/PriceChart'
@@ -8,25 +8,48 @@ import CopilotChat from '../components/CopilotChat'
 import AlertsPanel from '../components/AlertsPanel'
 import { getStock } from '../services/api'
 
-export default function Dashboard() {
-  const [selected, setSelected] = useState(null)
+export default function Dashboard({ selectedStock, setSelectedStock }) {
   const [stock, setStock] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const handleSearch = async (symbol) => {
-    setSelected(symbol)
-    setLoading(true)
-    setError(null)
-    setStock(null)
-    try {
-      const res = await getStock(symbol)
-      setStock(res)
-    } catch (err) {
-      setError(err?.detail || err?.message || String(err))
-    } finally {
+  // fetch stock data when selectedStock (symbol) changes
+  useEffect(() => {
+    let active = true
+    const symbol = selectedStock
+    if (!symbol) {
+      setStock(null)
+      setError(null)
       setLoading(false)
+      return
     }
+
+    const fetch = async () => {
+      setLoading(true)
+      setError(null)
+      setStock(null)
+      try {
+        const res = await getStock(typeof symbol === 'string' ? symbol : symbol.symbol ?? symbol)
+        if (!active) return
+        setStock(res)
+      } catch (err) {
+        if (!active) return
+        setError(err?.detail || err?.message || String(err))
+      } finally {
+        if (!active) return
+        setLoading(false)
+      }
+    }
+
+    fetch()
+
+    return () => {
+      active = false
+    }
+  }, [selectedStock])
+
+  const handleSearch = (symbol) => {
+    if (typeof setSelectedStock === 'function') setSelectedStock(symbol)
   }
 
   return (

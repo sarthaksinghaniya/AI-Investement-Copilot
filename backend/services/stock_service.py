@@ -34,11 +34,16 @@ async def fetch_stock_data(symbol: str) -> dict:
     ticker = yf.Ticker(symbol)
 
     info = ticker.fast_info if hasattr(ticker, 'fast_info') else ticker.info
-    if not info or 'regularMarketPrice' not in info or info.get('regularMarketPrice') is None:
+    # Check for price in multiple possible fields
+    price = None
+    for price_field in ['regularMarketPrice', 'lastPrice', 'previousClose']:
+        if price_field in info and info.get(price_field) is not None:
+            price = float(info[price_field])
+            break
+    
+    if price is None:
         logger.warning('Symbol not found or no price: %s', symbol)
         raise ValueError(f'Symbol {symbol} not found or has no available market price.')
-
-    latest_price = float(info.get('regularMarketPrice'))
 
     hist = ticker.history(period='45d', interval='1d', auto_adjust=False)
 
@@ -105,7 +110,7 @@ async def fetch_stock_data(symbol: str) -> dict:
 
     response = {
         'symbol': symbol,
-        'latest_price': latest_price,
+        'latest_price': price,
         'historical_data': historical_data_list,
         'indicators': indicators,
         'signal': signal_data,

@@ -1,11 +1,12 @@
 import datetime
 import asyncio
 from backend.services.stock_service import fetch_stock_data
+from backend.utils import normalize_stock_symbol
 import logging
 
 logger = logging.getLogger(__name__)
 
-STOCK_UNIVERSE = ["TCS.NS", "INFY.NS", "RELIANCE.NS", "HDFCBANK.NS"]
+STOCK_UNIVERSE = ["TCS", "INFY", "RELIANCE", "HDFCBANK"]
 
 # store latest alert signal per stock to avoid duplicates with timestamp
 _last_alerts: dict[str, dict] = {}
@@ -38,11 +39,15 @@ def _is_eligible_alert(signal: str, confidence: int) -> bool:
 async def _process_stock(symbol: str) -> dict | None:
     """Process a single stock for alert generation."""
     try:
-        data = await fetch_stock_data(symbol)
-        signal = data.get('signal')
-        confidence = int(data.get('confidence', 0))
+        # Normalize symbol for Indian stocks
+        normalized_symbol = normalize_stock_symbol(symbol)
+        data = await fetch_stock_data(normalized_symbol)
+        signal_data = data.get('signal', {})
+        signal = signal_data.get('type', 'WATCH')
+        confidence = float(signal_data.get('confidence', 0)) * 100  # Convert to percentage
+        reason = signal_data.get('reason', '')
 
-        if not _is_eligible_alert(signal, confidence):
+        if not _is_eligible_alert(signal, int(confidence)):
             return None
 
         now = datetime.datetime.utcnow()
@@ -55,7 +60,15 @@ async def _process_stock(symbol: str) -> dict | None:
 
             _last_alerts[symbol] = {'signal': signal, 'timestamp': now}
 
-        return _build_alert(symbol, signal, confidence)
+        return {
+            'symbol': symbol,
+            'signal': signal,
+            'confidence': confidence,
+            'message': f'{signal} signal with {int(confidence)}% confidence',
+            'reason': reason,
+            'price': data.get('latest_price', 0),
+            'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
+        }
 
     except Exception as exc:
         logger.warning('Skipping alert for %s: %s', symbol, exc)

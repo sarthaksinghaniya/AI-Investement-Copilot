@@ -18,7 +18,7 @@ const CopilotChat = ({ selectedStock }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !selectedStock) return;
 
     const userMessage = {
       id: Date.now(),
@@ -43,6 +43,7 @@ const CopilotChat = ({ selectedStock }) => {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
+      console.error('Copilot error:', error);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'error',

@@ -83,7 +83,7 @@ const Dashboard = () => {
               )}
 
               {/* Charts */}
-              {stockData && (
+              {stockData && stockData.historical_data && (
                 <>
                   <PriceChart 
                     historicalData={stockData.historical_data} 

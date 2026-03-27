@@ -9,6 +9,9 @@ const AlertsPanel = () => {
 
   useEffect(() => {
     fetchAlerts();
+    // Refresh alerts every 30 seconds
+    const interval = setInterval(fetchAlerts, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAlerts = async () => {
@@ -65,7 +68,7 @@ const AlertsPanel = () => {
     }
   };
 
-  if (loading) {
+  if (loading && alerts.length === 0) {
     return (
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
         <div className="flex items-center space-x-2 mb-4">
@@ -79,15 +82,15 @@ const AlertsPanel = () => {
     );
   }
 
-  if (error) {
+  if (error && alerts.length === 0) {
     return (
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
         <div className="flex items-center space-x-2 mb-4">
           <AlertTriangle className="h-5 w-5 text-yellow-400" />
           <h3 className="text-lg font-semibold text-white">Market Alerts</h3>
         </div>
-        <div className="flex items-center justify-center h-32 text-red-400">
-          <p>{error}</p>
+        <div className="flex items-center justify-center h-32 text-gray-400">
+          <p className="text-sm text-gray-400">No alerts available</p>
         </div>
       </div>
     );
@@ -129,22 +132,17 @@ const AlertsPanel = () => {
                   </span>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {alert.confidence ? `${(alert.confidence * 100).toFixed(0)}%` : ''}
+                  {alert.confidence ? `${Math.round(alert.confidence)}%` : ''}
                 </span>
               </div>
               
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-300">
-                  ${alert.price ? alert.price.toFixed(2) : 'N/A'}
-                </span>
-                {alert.change && (
-                  <span className={`text-xs font-medium ${
-                    alert.change > 0 ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {alert.change > 0 ? '+' : ''}{alert.change.toFixed(2)}%
+              {alert.price && (
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-gray-300">
+                    ${alert.price.toFixed(2)}
                   </span>
-                )}
-              </div>
+                </div>
+              )}
               
               {alert.reason && (
                 <p className="text-xs text-gray-400 mt-2 line-clamp-2">

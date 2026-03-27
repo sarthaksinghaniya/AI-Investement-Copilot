@@ -1,16 +1,17 @@
 import re
 from backend.services.stock_service import fetch_stock_data
+from backend.utils import normalize_stock_symbol
 import logging
 
 logger = logging.getLogger(__name__)
 
 _STOCK_MAP = {
-    'TCS': 'TCS.NS',
-    'INFOSYS': 'INFY.NS',
-    'INFY': 'INFY.NS',
-    'RELIANCE': 'RELIANCE.NS',
-    'ICICI': 'ICICI.NS',
-    'HDFC': 'HDFC.NS',
+    'TCS': 'TCS',
+    'INFOSYS': 'INFY',
+    'INFY': 'INFY',
+    'RELIANCE': 'RELIANCE',
+    'ICICI': 'ICICI',
+    'HDFC': 'HDFC',
 }
 
 
@@ -24,44 +25,39 @@ def detect_symbol_from_query(query: str) -> str | None:
 
     for token in tokens:
         if token in _STOCK_MAP:
-            return _STOCK_MAP[token]
+            return normalize_stock_symbol(_STOCK_MAP[token])
 
     return None
 
 
-async def generate_copilot_reply(query: str) -> dict:
-    """Generate AI copilot structured and conversational answer for stock queries."""
-    symbol = detect_symbol_from_query(query)
+async def generate_copilot_reply(query: str, stock: str = None) -> str:
+    """Generate AI copilot conversational response for stock queries."""
+    # Use provided stock or detect from query
+    symbol = stock or detect_symbol_from_query(query)
+    
     if not symbol:
-        return {
-            'answer': 'Please specify a stock, e.g., "TCS" or "Infosys".',
-            'details': None,
-        }
+        return 'Please specify a stock symbol (e.g., "TCS", "INFY", "RELIANCE").'
 
     try:
         stock_data = await fetch_stock_data(symbol)
     except ValueError as exc:
         logger.warning('Stock service error for %s: %s', symbol, exc)
-        return {
-            'answer': str(exc),
-            'details': None,
-        }
+        return str(exc)
     except Exception as exc:
         logger.error('Unexpected error in copilot service: %s', exc)
-        return {
-            'answer': 'An error occurred while processing your request.',
-            'details': None,
-        }
+        return 'An error occurred while processing your request.'
 
     # Extract ML signal and indicators
     signal_data = stock_data.get('signal', {})
     indicators = stock_data.get('indicators', {})
     signal = signal_data.get('type', 'WATCH')
     confidence = signal_data.get('confidence', 0.0)
-    probabilities = signal_data.get('probabilities', {})
-    source = signal_data.get('source', 'ml_model')
+    reason = signal_data.get('reason', '')
 
-    # Feature importance (static order for now)
+    # Get current price
+    price = stock_data.get('latest_price', 0)
+
+    # Feature importance
     feature_importance = [
         ('SMA_50', 0.17),
         ('EMA_20', 0.16),
@@ -75,69 +71,32 @@ async def generate_copilot_reply(query: str) -> dict:
     top_features = [f for f, _ in feature_importance[:3]]
     top_feat_str = ', '.join(top_features)
 
-    # Reasoning layer
-    rsi = indicators.get('rsi') or indicators.get('RSI')
-    ema_10 = indicators.get('ema_10') or indicators.get('EMA_10')
-    ema_20 = indicators.get('ema_20') or indicators.get('EMA_20')
-    sma_50 = indicators.get('sma_50') or indicators.get('SMA_50')
-    momentum = indicators.get('momentum')
-    volatility = indicators.get('volatility')
-
-    reasoning = []
-    if signal == 'BUY':
-        if rsi is not None and rsi < 35:
-            reasoning.append('RSI indicates potential reversal or strength')
-        if ema_10 and ema_20 and ema_10 > ema_20:
-            reasoning.append('Short-term EMA above long-term EMA (bullish)')
-        if sma_50 and ema_20 and sma_50 > ema_20:
-            reasoning.append('SMA_50 above EMA_20 (uptrend)')
-        if momentum and momentum > 0:
-            reasoning.append('Positive momentum detected')
-        if volatility and volatility < 0.03:
-            reasoning.append('Low volatility, stable uptrend')
-    elif signal == 'SELL':
-        if rsi is not None and rsi > 65:
-            reasoning.append('RSI indicates overbought/weakness')
-        if ema_10 and ema_20 and ema_10 < ema_20:
-            reasoning.append('Short-term EMA below long-term EMA (bearish)')
-        if sma_50 and ema_20 and sma_50 < ema_20:
-            reasoning.append('SMA_50 below EMA_20 (downtrend)')
-        if momentum and momentum < 0:
-            reasoning.append('Negative momentum detected')
-        if volatility and volatility > 0.04:
-            reasoning.append('High volatility, unstable trend')
-    else:
-        reasoning.append('No strong trend or signal detected')
-
     # Compose human-like response
+    conf_pct = int(confidence * 100)
+    
     if signal == 'BUY':
         response = (
-            f"Based on current market indicators, {symbol} shows a bullish signal.\n"
-            f"- Confidence: {confidence:.2f}\n"
-            f"- Top indicators: {top_feat_str}\n"
-            + ''.join([f"- {r}\n" for r in reasoning]) +
-            "Recommendation: Consider buying, but monitor price action."
+            f"📈 {symbol} is showing strong bullish signals at ${price:.2f}\n\n"
+            f"Signal: BUY (Confidence: {conf_pct}%)\n\n"
+            f"Key Indicators:\n{reason}\n\n"
+            f"Analysis: {top_feat_str}\n\n"
+            f"Recommendation: This is a good entry point. Monitor support levels and volume confirmation."
         )
     elif signal == 'SELL':
         response = (
-            f"{symbol} is showing bearish signals.\n"
-            f"- Confidence: {confidence:.2f}\n"
-            f"- Top indicators: {top_feat_str}\n"
-            + ''.join([f"- {r}\n" for r in reasoning]) +
-            "Recommendation: Consider selling or avoiding entry."
+            f"📉 {symbol} is showing bearish signals at ${price:.2f}\n\n"
+            f"Signal: SELL (Confidence: {conf_pct}%)\n\n"
+            f"Key Indicators:\n{reason}\n\n"
+            f"Analysis: {top_feat_str}\n\n"
+            f"Recommendation: Consider reducing exposure or taking profits. Monitor for trend reversal."
         )
     else:
         response = (
-            f"{symbol} is currently in a neutral zone.\n"
-            f"- Confidence: {confidence:.2f}\n"
-            f"- Top indicators: {top_feat_str}\n"
-            + ''.join([f"- {r}\n" for r in reasoning]) +
-            "Recommendation: Wait for a clearer opportunity."
+            f"⏸️ {symbol} is neutral at ${price:.2f}\n\n"
+            f"Signal: WATCH (Confidence: {conf_pct}%)\n\n"
+            f"Key Indicators:\n{reason}\n\n"
+            f"Analysis: {top_feat_str}\n\n"
+            f"Recommendation: Wait for clearer signals or support/resistance breaks before acting."
         )
 
-    return {
-        "symbol": symbol,
-        "signal": signal,
-        "confidence": confidence,
-        "response": response.strip(),
-    }
+    return response

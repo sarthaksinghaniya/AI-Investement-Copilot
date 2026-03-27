@@ -1,164 +1,229 @@
 # AI Investment Copilot
 
-## Overview
+A modern, production-level AI-powered stock analysis dashboard built with React, Vite, and Tailwind CSS.
 
-A FastAPI-based AI Stock Advisor backend with:
-- `/stock/{symbol}` endpoint (price, history, indicators, signal, prediction)
-- `/copilot/chat` endpoint (rule-based natural language query)
-- `/alerts` endpoint (proactive signal alerts)
-- LSTM prediction engine (`ml/train_model.py`, `ml/predict.py`)
-- in-memory caching and async alerts
+## Features
 
+- **Stock Analysis**: Real-time stock data with BUY/SELL/WATCH signals
+- **Interactive Charts**: Price charts with technical indicators (EMA, SMA) and RSI analysis
+- **AI Copilot**: Intelligent chat interface for stock insights and analysis
+- **Probability Analysis**: Visual representation of signal probabilities
+- **Market Alerts**: Real-time alerts for strong market signals (auto-refresh every 30s)
+- **Responsive Design**: Modern fintech UI inspired by TradingView
+- **Indian Stock Support**: Automatic symbol normalization for Indian stocks (.NS suffix)
 
-## Project structure
+## Tech Stack
+
+- **Frontend**: React 18 + Vite
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **HTTP Client**: Axios
+- **Icons**: Lucide React
+- **API**: FastAPI backend (running on http://127.0.0.1:8000)
+
+## Project Structure
 
 ```
-backend/
-  main.py
-  routes/
-    stock.py
-    copilot.py
-    alerts.py
-  services/
-    stock_service.py
-    signal_engine.py
-    copilot_service.py
-    alerts_service.py
-  utils/
-    indicators.py
-ml/
-  build_dataset.py
-  full_pipeline.py
-  predict_signal.py
-  predict.py
-  test_signals.py
-  train_classifier.py
-  train_model.py
-  data/
-    dataset.csv
-  models/
-    classifier.pkl
-    lstm_model.h5
-    scaler.pkl
-  outputs/
-    metrics/
-      classifier_metrics.json
-      metrics.json
-    plots/
-      confusion_matrix.png
-      feature_importance.png
-    test_results/
-      signals.csv
-      signals.json
-models/
-  lstm_model.h5
-  scaler.pkl
-outputs/
-  run_20260325_135830/
-    logs/
-      training_log.txt
-    metrics/
-      metrics.json
-    models/
-      best_model.h5
-      lstm_model.h5
-    plots/
-requirements.txt
-README.md
+src/
+ ├── components/
+ │    ├── SearchBar.jsx          # Stock search functionality
+ │    ├── StockCard.jsx          # Stock information display with signal icons
+ │    ├── PriceChart.jsx         # Price and technical indicators chart
+ │    ├── RSIChart.jsx           # RSI analysis chart
+ │    ├── ProbabilityBar.jsx     # Signal probabilities visualization
+ │    ├── CopilotChat.jsx        # AI chat interface with validation
+ │    └── AlertsPanel.jsx        # Market alerts with auto-refresh
+ │
+ ├── pages/
+ │    └── Dashboard.jsx           # Main dashboard layout
+ │
+ ├── services/
+ │    └── api.js                 # API service layer with Indian stock support
+ │
+ ├── App.jsx                     # Root component
+ ├── main.jsx                    # Application entry point
+ └── index.css                   # Global styles with Tailwind
+
+Backend/
+ ├── main.py                    # FastAPI application
+ ├── routes/                     # API endpoints
+ ├── ml/                        # Machine learning models
+ └── services/                   # Business logic
 ```
 
+## Installation
 
-## Setup
+1. **Install frontend dependencies**
+   ```bash
+   npm install
+   ```
 
-1. Create venv & install dependencies:
+2. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+3. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+## Usage
+
+1. **Search for stocks**: Use the search bar to look up any stock symbol
+   - Indian stocks: TCS, INFY, RELIANCE (auto-adds .NS)
+   - US stocks: AAPL, TSLA, GOOGL
+
+2. **View analysis**: The dashboard displays:
+   - Current price and signal with visual indicators
+   - Technical analysis with price charts and indicators
+   - RSI indicator with overbought/oversold zones
+   - Signal probabilities with confidence levels
+
+3. **AI Copilot**: Ask questions about the selected stock:
+   - "What are the key technical indicators?"
+   - "Should I buy this stock now?"
+   - "What are the risk factors?"
+
+4. **Market Alerts**: Monitor real-time alerts for strong BUY/SELL signals
+   - Auto-refreshes every 30 seconds
+   - Shows confidence percentages and pricing
+
+## API Endpoints
+
+### GET /stock/{symbol}
+Returns comprehensive stock analysis:
+```json
+{
+  "symbol": "AAPL",
+  "price": 150.25,
+  "signal": "BUY",
+  "confidence": 0.85,
+  "reason": "Strong bullish momentum detected",
+  "top_factors": [
+    {"factor": "RSI Oversold", "signal": "BUY"},
+    {"factor": "EMA Crossover", "signal": "BUY"}
+  ],
+  "probabilities": {
+    "BUY": 0.75,
+    "SELL": 0.10,
+    "WATCH": 0.15
+  },
+  "historical_data": [...],
+  "indicators": {
+    "RSI": [...],
+    "EMA_10": [...],
+    "EMA_20": [...],
+    "SMA_50": [...]
+  }
+}
 ```
 
-2. Train LSTM model once:
-
-```bash
-python ml/train_model.py
+### POST /copilot/chat
+AI chat interaction:
+```json
+{
+  "query": "What are the key indicators for AAPL?",
+  "stock": "AAPL"
+}
 ```
 
-3. Start API:
+### GET /alerts
+Returns market alerts for strong signals with auto-refresh.
 
-```bash
-cd backend
-uvicorn main:app --reload
-source venv/Scripts/activate && uvicorn backend.main:app --reload
-```
+## Component Details
 
-## Endpoints
+### SearchBar
+- Real-time stock symbol search with validation
+- Enter key support for quick searches
+- Auto-formatting for stock symbols
 
-- `GET /stock/{symbol}`
-  - returns symbol, latest_price, historical_data (last 30d OHLC+indicators), indicators, signal analysis, prediction block
+### StockCard
+- Enhanced display with signal icons (BUY/SELL/WATCH)
+- Color-coded signal badges with confidence percentages
+- Top contributing factors (limited to 3 for better UX)
+- Conditional analysis section display
 
-- `POST /copilot/chat`
-  - body: `{ "query": "Should I buy TCS?" }`
-  - returns answer + details
+### PriceChart
+- Interactive line chart with Recharts
+- Multiple indicators: Close Price, EMA 10/20, SMA 50
+- Custom tooltips and dark theme
+- Conditional rendering based on data availability
 
-- `GET /alerts`
-  - returns active strong BUY/SELL alerts from sample stock universe
+### RSIChart
+- RSI indicator visualization
+- Reference lines for overbought (70) and oversold (30) levels
+- Color-coded zones for easy interpretation
 
+### ProbabilityBar
+- Horizontal bar charts for signal probabilities
+- Animated transitions with confidence indicators
+- Dominant signal highlighting
 
-## Prediction engine
+### CopilotChat
+- Enhanced AI chat interface with stock validation
+- Message history with timestamps
+- Typing indicators and error handling
+- Prevents queries without selected stock
 
-- `ml/train_model.py`: downloads 1 year close data, builds LSTM, saves model + scaler.
-- `ml/predict.py`: generates 7-day forecasts and trend/confidence.
-- integrated into `/stock/{symbol}` as `prediction` field.
+### AlertsPanel
+- Real-time market alerts with 30-second auto-refresh
+- Enhanced error handling and loading states
+- Improved alert display with confidence percentages
+- Graceful degradation for missing data
 
+## Recent Improvements
 
-## Notes
+### Enhanced UI/UX
+- Added signal icons to StockCard for better visual feedback
+- Improved analysis section with conditional rendering
+- Better error handling in CopilotChat
+- Enhanced alerts display with cleaner layout
 
-- caching TTL for stock_data = 60s
-- alert dedupe TTL = 1h
-- this is a PoC for backend behavior; model accuracy requires longer training and proper validation
+### Better Data Handling
+- Indian stock symbol normalization (auto .NS suffix)
+- Improved API error handling with fallbacks
+- Conditional chart rendering to prevent crashes
+- Better loading states and error messages
 
-## New ML pipeline (XGBoost signal classifier)
+### Performance & Reliability
+- Auto-refresh alerts every 30 seconds
+- Improved error logging and debugging
+- Better null/undefined data handling
+- Optimized component re-renders
 
-Added scripts:
-- `ml/build_dataset.py` (multi-symbol dataset + engineering + labeling)
-- `ml/train_classifier.py` (XGB classifier, thresholded BUY/SELL/WATCH, metrics output)
+## Styling
 
-Run:
+- **Dark theme**: Professional fintech appearance
+- **Responsive design**: Works on desktop and mobile
+- **Modern UI**: Rounded corners, shadows, and smooth transitions
+- **Color coding**: Intuitive signal visualization
+- **Loading states**: Smooth user experience during data fetching
 
-```bash
-source venv/Scripts/activate
-python ml/build_dataset.py
-python ml/train_classifier.py
-```
+## Error Handling
 
-- model saved to `ml/models/classifier.pkl`
-- metrics saved to `ml/outputs/metrics/classifier_metrics.json`
-- improves BUY/SELL recall and overall accuracy
+- Network error handling with user-friendly messages
+- Empty state handling for no data scenarios
+- Loading indicators for better UX
+- Input validation and sanitization
+- Graceful degradation for missing data
 
-## Signal Testing
+## Browser Support
 
-- `ml/test_signals.py`: Tests ML signal distribution across multiple stocks
-- Fetches last 3 months data, computes indicators, predicts signals
-- Saves results to `ml/outputs/test_results/signals.json` and `signals.csv`
-- Prints distribution summary and table
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Modern browsers with ES6+ support
 
-Run:
+## Contributing
 
-```bash
-python ml/test_signals.py
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-Example output:
-```
-Signal Distribution:
-BUY: 12.5%
-SELL: 25.0%
-WATCH: 62.5%
+## License
 
-Symbol | Signal | Confidence
-TCS.NS | SELL | 0.62
-INFY.NS | WATCH | 0.49
-...
-```
+This project is licensed under the MIT License.
 

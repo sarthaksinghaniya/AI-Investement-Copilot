@@ -113,8 +113,58 @@ def score_signal(rsi: float, price: float, ema: float, volume: float, avg_volume
     }
 
 
+def _classify_strength(signal: str, confidence: float) -> str:
+    if signal in {"BUY", "SELL"} and confidence >= 0.55:
+        return "STRONG"
+    return "NORMAL"
+
+
+def _rule_based_signal(indicators: dict) -> tuple[str, float]:
+    rsi = indicators.get("rsi")
+    ema_10 = indicators.get("ema_10")
+    ema_20 = indicators.get("ema_20")
+    momentum = indicators.get("momentum")
+    returns = indicators.get("returns")
+
+    bullish_bias = (
+        rsi is not None
+        and ema_10 is not None
+        and ema_20 is not None
+        and momentum is not None
+        and rsi <= 45
+        and ema_10 >= ema_20
+        and momentum >= 0
+    )
+
+    bearish_bias = (
+        rsi is not None
+        and ema_10 is not None
+        and ema_20 is not None
+        and momentum is not None
+        and rsi >= 55
+        and ema_10 <= ema_20
+        and momentum <= 0
+    )
+
+    if bullish_bias:
+        confidence = 0.58
+        if returns is not None and returns > 0:
+            confidence = 0.62
+        return "BUY", confidence
+
+    if bearish_bias:
+        confidence = 0.58
+        if returns is not None and returns < 0:
+            confidence = 0.62
+        return "SELL", confidence
+
+    return "WATCH", 0.50
+
+
 def generate_signal(indicators: dict):
     """Generate trading signal using ML model from indicators dict."""
+    top_factors = get_top_factors(indicators)
+
     try:
         features = {
             "RSI": indicators.get("rsi"),
@@ -128,24 +178,36 @@ def generate_signal(indicators: dict):
         }
 
         result = predict_signal(features)
-        reason = generate_reason(indicators, result["signal"])
-        top_factors = get_top_factors(indicators)
+        signal = result["signal"]
+        confidence = float(result["confidence"])
+        rule_signal, rule_confidence = _rule_based_signal(indicators)
+
+        if signal == "WATCH" and rule_signal != "WATCH":
+            signal = rule_signal
+            confidence = max(confidence, rule_confidence)
+
+        strength = _classify_strength(signal, confidence)
+        reason = generate_reason(indicators, signal)
+        probabilities = result.get("probabilities", {"buy": 0.0, "sell": 0.0, "watch": 1.0})
+
         return {
-            "type": result["signal"],
-            "confidence": result["confidence"],
-            "probabilities": result["probabilities"],
+            "type": signal,
+            "confidence": confidence,
+            "strength": strength,
+            "probabilities": probabilities,
             "reason": reason,
             "top_factors": top_factors,
             "source": "ml_model"
         }
 
     except Exception as e:
-        # fallback to rule-based logic
-        reason = generate_reason(indicators, "WATCH")
-        top_factors = get_top_factors(indicators)
+        signal, confidence = _rule_based_signal(indicators)
+        strength = _classify_strength(signal, confidence)
+        reason = generate_reason(indicators, signal)
         return {
-            "type": "WATCH",
-            "confidence": 0.5,
+            "type": signal,
+            "confidence": confidence,
+            "strength": strength,
             "probabilities": {"buy": 0.0, "sell": 0.0, "watch": 1.0},
             "reason": reason or "fallback due to error",
             "top_factors": top_factors,

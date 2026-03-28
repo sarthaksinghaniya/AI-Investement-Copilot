@@ -31,6 +31,40 @@ def _get_last_close(symbol: str, days: int = 60) -> np.ndarray:
     return close
 
 
+def predict_future(model, last_sequence, steps=15):
+    """
+    Generate future price predictions using LSTM model.
+    
+    Args:
+        model: Trained LSTM model
+        last_sequence: Last sequence of actual prices (scaled)
+        steps: Number of future steps to predict (default: 15)
+    
+    Returns:
+        List of predicted prices (inverse-transformed to original scale)
+    """
+    import numpy as np
+    
+    predictions = []
+    current_seq = last_sequence.copy()
+    
+    for _ in range(steps):
+        # Reshape for model input
+        x_input = current_seq[-60:].reshape(1, -1, 1)
+        
+        # Get prediction
+        pred_scaled = model.predict(x_input, verbose=0)[0][0]
+        
+        # Inverse transform to get actual price
+        pred_actual = scaler.inverse_transform([[pred_scaled]])[0][0]
+        predictions.append(float(pred_actual))
+        
+        # Update sequence with new prediction (sliding window)
+        current_seq = np.append(current_seq[1:], pred_scaled)
+    
+    return predictions
+
+
 def predict_prices(symbol: str) -> dict:
     model, scaler = _load_assets()
     last_data = _get_last_close(symbol, days=60)
@@ -38,6 +72,7 @@ def predict_prices(symbol: str) -> dict:
     scaled_data = scaler.transform(last_data)
     seq = scaled_data.copy()
 
+    # Generate 7-day predictions (existing functionality)
     predictions = []
     for _ in range(7):
         x_input = seq[-60:].reshape(1, 60, 1)
@@ -45,6 +80,9 @@ def predict_prices(symbol: str) -> dict:
         seq = np.vstack((seq, pred_scaled))
         pred = scaler.inverse_transform(pred_scaled)[0, 0]
         predictions.append(float(pred))
+
+    # Generate 15-day future predictions (new functionality)
+    future_predictions = predict_future(model, scaled_data, steps=15)
 
     current_price = float(last_data[-1, 0])
     final_pred = predictions[-1]
@@ -60,6 +98,7 @@ def predict_prices(symbol: str) -> dict:
 
     return {
         'predictions': predictions,
+        'future_predictions': future_predictions,  # NEW: 15-day future predictions
         'trend': trend,
         'confidence': round(confidence, 4),
     }

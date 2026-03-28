@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 import asyncio
 from backend.utils.indicators import calculate_sma, calculate_ema
-from backend.services.signal_engine import generate_signal
+from backend.services.signal_engine import generate_signal, calculate_rsi
 from ml.predict import predict_prices
 import logging
 
@@ -57,11 +57,22 @@ async def fetch_stock_data(symbol: str) -> dict:
         logger.warning('No valid OHLC rows after dropna for symbol: %s', symbol)
         raise ValueError(f'No historical OHLC data for symbol {symbol}.')
 
-    latest_hist = hist.tail(30).copy()
+    enriched_hist = hist.copy()
+    enriched_hist['SMA_20'] = calculate_sma(enriched_hist['Close'], window=20)
+    enriched_hist['EMA_10'] = calculate_ema(enriched_hist['Close'], window=10)
+    enriched_hist['EMA_20'] = calculate_ema(enriched_hist['Close'], window=20)
+    enriched_hist['SMA_50'] = calculate_sma(enriched_hist['Close'], window=50)
+    enriched_hist['RSI'] = calculate_rsi(enriched_hist['Close'], period=14)
+    enriched_hist['returns'] = enriched_hist['Close'].pct_change()
+    enriched_hist['volatility'] = enriched_hist['Close'].pct_change().rolling(window=10).std()
+    enriched_hist['momentum'] = enriched_hist['Close'] - enriched_hist['Close'].shift(10)
+    enriched_hist['volume_change'] = enriched_hist['Volume'].pct_change()
+
+    latest_hist = enriched_hist.tail(30).copy()
     latest_hist.reset_index(inplace=True)
 
-    latest_hist['SMA_20'] = calculate_sma(hist['Close'], window=20)
-    latest_hist['EMA_20'] = calculate_ema(hist['Close'], window=20)
+    def safe_float(value):
+        return None if pd.isna(value) else float(value)
 
     historical_data_list = []
     for _, row in latest_hist.iterrows():
@@ -72,32 +83,40 @@ async def fetch_stock_data(symbol: str) -> dict:
             'low': float(row['Low']),
             'close': float(row['Close']),
             'volume': int(row['Volume']),
-            'SMA_20': None if pd.isna(row['SMA_20']) else float(row['SMA_20']),
-            'EMA_20': None if pd.isna(row['EMA_20']) else float(row['EMA_20']),
+            'rsi': safe_float(row['RSI']),
+            'ema_10': safe_float(row['EMA_10']),
+            'ema_20': safe_float(row['EMA_20']),
+            'sma_20': safe_float(row['SMA_20']),
+            'sma_50': safe_float(row['SMA_50']),
+            'returns': safe_float(row['returns']),
+            'volatility': safe_float(row['volatility']),
+            'momentum': safe_float(row['momentum']),
+            'volume_change': safe_float(row['volume_change']),
+            'RSI': safe_float(row['RSI']),
+            'EMA_10': safe_float(row['EMA_10']),
+            'EMA_20': safe_float(row['EMA_20']),
+            'SMA_20': safe_float(row['SMA_20']),
+            'SMA_50': safe_float(row['SMA_50']),
         })
-
 
     # Compute all required indicators for ML model
     indicators = {
-        'rsi': None, 'ema_10': None, 'ema_20': None, 'sma_50': None, 'returns': None,
-        'volume_change': None, 'volatility': None, 'momentum': None,
-        'SMA_20': None, 'EMA_20': None
+        'rsi': safe_float(latest_hist['RSI'].iloc[-1]),
+        'ema_10': safe_float(latest_hist['EMA_10'].iloc[-1]),
+        'ema_20': safe_float(latest_hist['EMA_20'].iloc[-1]),
+        'sma_50': safe_float(latest_hist['SMA_50'].iloc[-1]),
+        'returns': safe_float(latest_hist['returns'].iloc[-1]),
+        'volume_change': safe_float(latest_hist['volume_change'].iloc[-1]),
+        'volatility': safe_float(latest_hist['volatility'].iloc[-1]),
+        'momentum': safe_float(latest_hist['momentum'].iloc[-1]),
+        'SMA_20': safe_float(latest_hist['SMA_20'].iloc[-1]),
+        'EMA_20': safe_float(latest_hist['EMA_20'].iloc[-1]),
+        'RSI_SERIES': [value for value in (safe_float(value) for value in latest_hist['RSI'].tolist())],
+        'EMA_10_SERIES': [value for value in (safe_float(value) for value in latest_hist['EMA_10'].tolist())],
+        'EMA_20_SERIES': [value for value in (safe_float(value) for value in latest_hist['EMA_20'].tolist())],
+        'SMA_20_SERIES': [value for value in (safe_float(value) for value in latest_hist['SMA_20'].tolist())],
+        'SMA_50_SERIES': [value for value in (safe_float(value) for value in latest_hist['SMA_50'].tolist())],
     }
-    # Calculate indicators from latest_hist
-    if 'Close' in latest_hist:
-        close = latest_hist['Close']
-        indicators['rsi'] = float(close.diff().clip(lower=0).rolling(14).mean().iloc[-1]) if len(close) >= 14 else None
-        indicators['ema_10'] = float(close.ewm(span=10, adjust=False).mean().iloc[-1])
-        indicators['ema_20'] = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
-        indicators['sma_50'] = float(close.rolling(window=50).mean().iloc[-1]) if len(close) >= 50 else None
-        indicators['returns'] = float(close.pct_change().iloc[-1])
-        indicators['volatility'] = float(close.pct_change().rolling(window=10).std().iloc[-1]) if len(close) >= 10 else None
-        indicators['momentum'] = float(close.iloc[-1] - close.iloc[-11]) if len(close) >= 11 else None
-    if 'Volume' in latest_hist:
-        volume = latest_hist['Volume']
-        indicators['volume_change'] = float(volume.pct_change().iloc[-1])
-    indicators['SMA_20'] = None if pd.isna(latest_hist['SMA_20'].iloc[-1]) else float(latest_hist['SMA_20'].iloc[-1])
-    indicators['EMA_20'] = None if pd.isna(latest_hist['EMA_20'].iloc[-1]) else float(latest_hist['EMA_20'].iloc[-1])
 
     signal_data = generate_signal(indicators)
     prediction_data = {}
@@ -116,6 +135,7 @@ async def fetch_stock_data(symbol: str) -> dict:
         'signal': signal_data,
         'prediction': {
             'next_7_days': prediction_data.get('predictions', []),
+            'future_predictions': prediction_data.get('future_predictions', []),  # NEW: 15-day future predictions
             'trend': prediction_data.get('trend', 'SIDEWAYS'),
             'confidence': prediction_data.get('confidence', 0.0),
         },

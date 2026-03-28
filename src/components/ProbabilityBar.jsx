@@ -12,9 +12,9 @@ const ProbabilityBar = ({ probabilities }) => {
     );
   }
 
-  const buyProbability = probabilities.BUY || 0;
-  const sellProbability = probabilities.SELL || 0;
-  const watchProbability = probabilities.WATCH || 0;
+  const buyProbability = Number(probabilities.BUY ?? probabilities.buy ?? 0);
+  const sellProbability = Number(probabilities.SELL ?? probabilities.sell ?? 0);
+  const watchProbability = Number(probabilities.WATCH ?? probabilities.watch ?? 0);
 
   const getBarColor = (signal) => {
     switch (signal) {

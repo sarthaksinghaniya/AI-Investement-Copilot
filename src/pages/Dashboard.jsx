@@ -87,12 +87,43 @@ const Dashboard = () => {
                 <>
                   <PriceChart 
                     historicalData={stockData.historical_data} 
-                    indicators={stockData.indicators} 
+                    indicators={stockData.indicators}
+                    futurePredictions={stockData.prediction?.future_predictions || []}
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <RSIChart indicators={stockData.indicators} />
+                    <RSIChart
+                      historicalData={stockData.historical_data}
+                      indicators={stockData.indicators}
+                    />
                     <ProbabilityBar probabilities={stockData.probabilities} />
                   </div>
+                  {/* Trend Direction Indicator */}
+                  {stockData.prediction?.future_predictions && stockData.prediction.future_predictions.length > 0 && (
+                    <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-4">Prediction Analysis</h3>
+                      <div className="flex items-center justify-between">
+                        <div className="text-gray-300">
+                          <span className="text-sm">15-Day Trend: </span>
+                          <span className={`font-bold text-lg ml-2 ${
+                            stockData.prediction.future_predictions[stockData.prediction.future_predictions.length - 1] > 
+                            stockData.prediction.future_predictions[0] 
+                              ? 'text-green-400' 
+                              : 'text-red-400'
+                          }`}>
+                            {stockData.prediction.future_predictions[stockData.prediction.future_predictions.length - 1] > 
+                             stockData.prediction.future_predictions[0] 
+                               ? '📈 UPTREND' 
+                               : '📉 DOWNTREND'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm text-gray-400">
+                            Confidence: {(stockData.prediction.confidence * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

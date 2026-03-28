@@ -10,8 +10,41 @@ import {
   ReferenceLine
 } from 'recharts';
 
-const RSIChart = ({ indicators }) => {
-  if (!indicators || !indicators.RSI || indicators.RSI.length === 0) {
+const RSIChart = ({ historicalData, indicators }) => {
+  const safeNumber = (value) => {
+    const parsedValue = Number(value);
+    return Number.isFinite(parsedValue) ? parsedValue : null;
+  };
+
+  const historicalSeries = Array.isArray(historicalData)
+    ? historicalData
+        .map((item, index) => ({
+          date: item.date || `Day ${index + 1}`,
+          rsi: safeNumber(item.rsi ?? item.RSI),
+        }))
+        .filter((item) => item.rsi !== null)
+    : [];
+
+  const indicatorSeries = Array.isArray(indicators?.RSI)
+    ? indicators.RSI
+        .map((rsi, index) => ({
+          date: `Day ${index + 1}`,
+          rsi: safeNumber(rsi),
+        }))
+        .filter((item) => item.rsi !== null)
+    : [];
+
+  const fallbackRsi = safeNumber(indicators?.rsi ?? indicators?.RSI);
+
+  const chartData = historicalSeries.length > 0
+    ? historicalSeries
+    : indicatorSeries.length > 0
+      ? indicatorSeries
+      : fallbackRsi !== null
+        ? [{ date: 'Latest', rsi: fallbackRsi }]
+        : [];
+
+  if (chartData.length === 0) {
     return (
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
         <h3 className="text-lg font-semibold text-white mb-4">RSI Chart</h3>
@@ -21,11 +54,6 @@ const RSIChart = ({ indicators }) => {
       </div>
     );
   }
-
-  const chartData = indicators.RSI.map((rsi, index) => ({
-    date: `Day ${index + 1}`,
-    rsi: rsi || 0,
-  }));
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

@@ -14,11 +14,48 @@ const AlertsPanel = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const normalizeAlertsResponse = (data) => {
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (data && Array.isArray(data.alerts)) {
+      return data.alerts;
+    }
+
+    return [];
+  };
+
+  const formatConfidence = (confidence) => {
+    if (confidence === null || confidence === undefined || confidence === '') {
+      return '';
+    }
+
+    const numericConfidence = Number(confidence);
+
+    if (Number.isNaN(numericConfidence)) {
+      return '';
+    }
+
+    const percentage = numericConfidence <= 1 ? numericConfidence * 100 : numericConfidence;
+    return `${Math.round(percentage)}%`;
+  };
+
+  const formatPrice = (price) => {
+    const numericPrice = Number(price);
+
+    if (Number.isNaN(numericPrice)) {
+      return price;
+    }
+
+    return `$${numericPrice.toFixed(2)}`;
+  };
+
   const fetchAlerts = async () => {
     try {
       setLoading(true);
       const data = await alertsAPI.getAlerts();
-      setAlerts(data || []);
+      setAlerts(normalizeAlertsResponse(data));
       setError(null);
     } catch (err) {
       console.error('Error fetching alerts:', err);
@@ -108,55 +145,59 @@ const AlertsPanel = () => {
         </span>
       </div>
 
-      {alerts.length === 0 ? (
+      {alerts.length > 0 ? (
+        <div className="space-y-3 max-h-80 overflow-y-auto">
+          {alerts.map((alert, index) => (
+            <div
+              key={alert.symbol ? `${alert.symbol}-${index}` : index}
+              className={`p-3 rounded-lg border-l-4 ${getSignalColor(alert.signal)}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center space-x-2">
+                  {getSignalIcon(alert.signal)}
+                  <span className="font-semibold text-white">
+                    {alert.symbol || 'Unknown'}
+                  </span>
+                  <span className={`text-xs font-medium ${getSignalTextColor(alert.signal)}`}>
+                    {alert.signal || 'ALERT'}
+                  </span>
+                </div>
+                <span className={`text-sm font-semibold ${getSignalTextColor(alert.signal)}`}>
+                  {formatConfidence(alert.confidence)}
+                </span>
+              </div>
+
+              {alert.reason && (
+                <p className="text-sm text-gray-300 mb-2 line-clamp-2">
+                  {alert.reason}
+                </p>
+              )}
+
+              {(alert.price !== null && alert.price !== undefined) || alert.timestamp ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
+                  {alert.price !== null && alert.price !== undefined ? (
+                    <span className="text-sm text-gray-300">
+                      {formatPrice(alert.price)}
+                    </span>
+                  ) : (
+                    <span></span>
+                  )}
+
+                  {alert.timestamp && (
+                    <p className="text-xs text-gray-500">
+                      {new Date(alert.timestamp).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className="text-center text-gray-400 py-8">
           <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-gray-600" />
           <p>No strong signals detected</p>
           <p className="text-sm mt-1">Check back later for market alerts</p>
-        </div>
-      ) : (
-        <div className="space-y-3 max-h-80 overflow-y-auto">
-          {alerts.map((alert, index) => (
-            <div
-              key={index}
-              className={`p-3 rounded-lg border-l-4 ${getSignalColor(alert.signal)}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  {getSignalIcon(alert.signal)}
-                  <span className="font-semibold text-white">
-                    {alert.symbol}
-                  </span>
-                  <span className={`text-xs font-medium ${getSignalTextColor(alert.signal)}`}>
-                    {alert.signal}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {alert.confidence ? `${Math.round(alert.confidence)}%` : ''}
-                </span>
-              </div>
-              
-              {alert.price && (
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-gray-300">
-                    ${alert.price.toFixed(2)}
-                  </span>
-                </div>
-              )}
-              
-              {alert.reason && (
-                <p className="text-xs text-gray-400 mt-2 line-clamp-2">
-                  {alert.reason}
-                </p>
-              )}
-              
-              {alert.timestamp && (
-                <p className="text-xs text-gray-500 mt-2">
-                  {new Date(alert.timestamp).toLocaleString()}
-                </p>
-              )}
-            </div>
-          ))}
         </div>
       )}
     </div>

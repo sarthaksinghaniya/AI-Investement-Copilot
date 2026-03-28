@@ -18,6 +18,7 @@ class StockResponse(BaseModel):
     probabilities: dict
     historical_data: list
     indicators: dict
+    future_predictions: list = []  # NEW: 15-day future predictions
 
 
 @router.get('/stock/{symbol}', response_model=StockResponse)
@@ -31,6 +32,14 @@ async def get_stock(symbol: str):
 
         # Transform backend data to frontend format
         signal_data = data.get('signal', {})
+        raw_probabilities = signal_data.get('probabilities', {'buy': 0, 'sell': 0, 'watch': 1})
+
+        probabilities = {
+            'BUY': raw_probabilities.get('BUY', raw_probabilities.get('buy', 0)),
+            'SELL': raw_probabilities.get('SELL', raw_probabilities.get('sell', 0)),
+            'WATCH': raw_probabilities.get('WATCH', raw_probabilities.get('watch', 1)),
+        }
+
         return {
             'symbol': data['symbol'],
             'price': data['latest_price'],
@@ -38,9 +47,10 @@ async def get_stock(symbol: str):
             'confidence': signal_data.get('confidence', 0.0),
             'reason': signal_data.get('reason', ''),
             'top_factors': signal_data.get('top_factors', []),
-            'probabilities': signal_data.get('probabilities', {'buy': 0, 'sell': 0, 'watch': 1}),
+            'probabilities': probabilities,
             'historical_data': data['historical_data'],
-            'indicators': data['indicators']
+            'indicators': data['indicators'],
+            'future_predictions': data['prediction']['future_predictions']  # NEW: 15-day future predictions
         }
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))

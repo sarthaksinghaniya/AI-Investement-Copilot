@@ -66,10 +66,10 @@ export const alertsAPI = {
   getAlerts: async () => {
     try {
       const response = await api.get('/alerts');
-      return response.data || [];
+      return response.data;
     } catch (error) {
       console.error('Error fetching alerts:', error);
-      return [];
+      throw error;
     }
   }
 };

@@ -7,10 +7,16 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Area,
+  ComposedChart,
+  AreaChart,
+  ReferenceLine,
+  Cell
 } from 'recharts';
+import BacktestResults from './BacktestResults';
 
-const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
+const PriceChart = ({ historicalData, indicators, futurePredictions, backtest }) => {
   if (!historicalData || historicalData.length === 0) {
     return (
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
@@ -36,16 +42,21 @@ const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
     sma50: safeNumber(item.sma_50 ?? item.SMA_50),
   }));
 
-  // Add future predictions to chart data
-  const futureData = futurePredictions && futurePredictions.length > 0 ? futurePredictions.map((pred, i) => ({
-    date: `F${i + 1}`,
-    predicted: pred,
-    close: null, // No actual price for future dates
-    ema10: null,
-    ema20: null,
-    sma20: null,
-    sma50: null,
-  })) : [];
+  // Add future predictions to chart data with confidence range
+  const futureData = futurePredictions && futurePredictions.length > 0 ? futurePredictions.map((pred, i) => {
+    const confidenceRange = pred * 0.02; // ±2% confidence range
+    return {
+      date: `F${i + 1}`,
+      predicted: pred,
+      upperBound: pred + confidenceRange,
+      lowerBound: pred - confidenceRange,
+      close: null, // No actual price for future dates
+      ema10: null,
+      ema20: null,
+      sma20: null,
+      sma50: null,
+    };
+  }) : [];
 
   const mergedChartData = [...chartData, ...futureData];
 
@@ -62,17 +73,73 @@ const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
     sma50: item.sma50 ?? fallbackSma50,
   }));
 
+  // Add trade markers from backtest
+  const tradeMarkers = backtest?.trades || [];
+  const chartWithTrades = mergedChartData.map((item, index) => {
+    const trade = tradeMarkers.find(t => t.step === index);
+    return {
+      ...item,
+      tradeMarker: trade ? trade.type : null
+    };
+  });
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const predictedData = payload.find(p => p.name === 'Future Prediction');
       return (
         <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: ${entry.value ? entry.value.toFixed(2) : 'N/A'}
-            </p>
-          ))}
+          <p className="text-white font-medium mb-2">{label}</p>
+          {payload.map((entry, index) => {
+            if (entry.name === 'Future Prediction' && entry.payload.upperBound) {
+              return (
+                <div key={index} className="mb-1">
+                  <p className="text-sm font-semibold" style={{ color: entry.color }}>
+                    Predicted Price: ${entry.value ? entry.value.toFixed(2) : 'N/A'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Range: ${entry.payload.lowerBound?.toFixed(2)} - ${entry.payload.upperBound?.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    ±2% Confidence Range
+                  </p>
+                </div>
+              );
+            }
+            return (
+              <p key={index} className="text-sm mb-1" style={{ color: entry.color }}>
+                {entry.name}: ${entry.value ? entry.value.toFixed(2) : 'N/A'}
+              </p>
+            );
+          })}
         </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomDot = (props) => {
+    const { cx, cy, payload } = props;
+    if (payload && payload.tradeMarker) {
+      return (
+        <g>
+          <circle 
+            cx={cx} 
+            cy={cy} 
+            r={6} 
+            fill={payload.tradeMarker === 'BUY' ? '#3B82F6' : '#EF4444'}
+            stroke="#fff"
+            strokeWidth={2}
+          />
+          <text 
+            x={cx} 
+            y={cy - 10} 
+            fill="#fff" 
+            fontSize={10} 
+            textAnchor="middle"
+          >
+            {payload.tradeMarker === 'BUY' ? 'B' : 'S'}
+          </text>
+        </g>
       );
     }
     return null;
@@ -82,7 +149,7 @@ const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
     <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
       <h3 className="text-lg font-semibold text-white mb-4">Price Forecast (Next 15 Steps)</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={normalizedChartData}>
+        <ComposedChart data={chartWithTrades}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis 
             dataKey="date" 
@@ -99,6 +166,30 @@ const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
             wrapperStyle={{ color: '#9CA3AF' }}
             iconType="line"
           />
+          
+          {/* Shaded prediction zone for confidence range */}
+          {futurePredictions && futurePredictions.length > 0 && (
+            <Area
+              type="monotone"
+              dataKey="upperBound"
+              stroke="none"
+              fill="#ff7300"
+              fillOpacity={0.1}
+              name="Upper Confidence"
+            />
+          )}
+          {futurePredictions && futurePredictions.length > 0 && (
+            <Area
+              type="monotone"
+              dataKey="lowerBound"
+              stroke="none"
+              fill="#ff7300"
+              fillOpacity={0.2}
+              name="Lower Confidence"
+            />
+          )}
+          
+          {/* Technical indicators */}
           <Line
             type="monotone"
             dataKey="close"
@@ -134,18 +225,23 @@ const PriceChart = ({ historicalData, indicators, futurePredictions }) => {
             name="SMA 20"
             connectNulls={false}
           />
+          
+          {/* Future prediction line with trade markers */}
           <Line
             type="monotone"
             dataKey="predicted"
             stroke="#ff7300"
             strokeDasharray="5 5"
             strokeWidth={2}
-            dot={false}
+            dot={<CustomDot />}
             name="Future Prediction"
             connectNulls={false}
           />
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
+      
+      {/* Backtest Results */}
+      {backtest && <BacktestResults backtest={backtest} />}
     </div>
   );
 };

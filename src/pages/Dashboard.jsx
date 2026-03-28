@@ -6,6 +6,8 @@ import RSIChart from '../components/RSIChart';
 import ProbabilityBar from '../components/ProbabilityBar';
 import CopilotChat from '../components/CopilotChat';
 import AlertsPanel from '../components/AlertsPanel';
+import DecisionSummaryCard from '../components/DecisionSummaryCard';
+import AIExplanationCard from '../components/AIExplanationCard';
 import { stockAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -82,6 +84,22 @@ const Dashboard = () => {
                 </div>
               )}
 
+              {/* Decision Summary Card */}
+              {stockData && (
+                <DecisionSummaryCard
+                  signal={stockData.prediction?.prediction_signal || 'WATCH'}
+                  expectedReturn={stockData.prediction?.expected_return_pct || 0}
+                  confidence={stockData.prediction?.prediction_confidence || 0}
+                  backtest={stockData.backtest || {}}
+                  trend={stockData.prediction?.trend || 'SIDEWAYS'}
+                />
+              )}
+
+              {/* AI Explanation Card */}
+              {stockData?.ai_explanation && (
+                <AIExplanationCard explanation={stockData.ai_explanation} />
+              )}
+
               {/* Charts */}
               {stockData && stockData.historical_data && (
                 <>
@@ -89,6 +107,7 @@ const Dashboard = () => {
                     historicalData={stockData.historical_data} 
                     indicators={stockData.indicators}
                     futurePredictions={stockData.prediction?.future_predictions || []}
+                    backtest={stockData.backtest || {}}
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <RSIChart

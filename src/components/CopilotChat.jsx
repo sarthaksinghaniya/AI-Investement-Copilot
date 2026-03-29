@@ -65,11 +65,11 @@ const CopilotChat = ({ selectedStock }) => {
   };
 
   return (
-    <div className="flex h-[760px] flex-col rounded-2xl bg-white p-0 shadow-sm cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+    <div className="flex h-[760px] flex-col rounded-2xl bg-white p-0 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
       <div className="border-b border-gray-100 p-6">
-        <div className="flex items-center space-x-2">
-          <Bot className="h-5 w-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">AI Copilot</h3>
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-800">AI Copilot</h3>
           {selectedStock && (
             <span className="ml-auto text-sm text-gray-500">
               Analyzing: {selectedStock}
@@ -89,18 +89,18 @@ const CopilotChat = ({ selectedStock }) => {
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start space-x-2 ${
+              className={`flex items-start gap-2 ${
                 message.type === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
               {message.type === 'ai' && (
                 <div className="flex-shrink-0">
-                  <Bot className="h-6 w-6 text-blue-600" />
+                  <Bot className="h-6 w-6 text-gray-400" />
                 </div>
               )}
               
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg transition-all duration-300 ease-out ${
+                className={`max-w-xs rounded-lg px-4 py-2 transition-all duration-200 ease-out lg:max-w-md ${
                   message.type === 'user'
                     ? 'bg-blue-600 text-white'
                     : message.type === 'error'
@@ -122,8 +122,8 @@ const CopilotChat = ({ selectedStock }) => {
         )}
         
         {isLoading && (
-          <div className="flex items-start space-x-2 justify-start">
-            <Bot className="h-6 w-6 text-blue-600" />
+          <div className="flex items-start justify-start gap-2">
+            <Bot className="h-6 w-6 text-gray-400" />
             <div className="rounded-lg bg-gray-100 px-4 py-2 text-gray-600">
               <div className="flex space-x-1">
                 <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
@@ -146,12 +146,12 @@ const CopilotChat = ({ selectedStock }) => {
             onKeyPress={handleKeyPress}
             placeholder={selectedStock ? `Ask about ${selectedStock}...` : 'Select a stock to start chatting...'}
             disabled={!selectedStock || isLoading}
-            className="flex-1 rounded-xl bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!input.trim() || !selectedStock || isLoading}
-            className="cursor-pointer px-6 py-3 rounded-2xl bg-gray-900 text-white transition-all duration-300 hover:bg-black hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="cursor-pointer rounded-2xl bg-gray-900 px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.03] hover:bg-black active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <Send className="h-4 w-4" />
           </button>

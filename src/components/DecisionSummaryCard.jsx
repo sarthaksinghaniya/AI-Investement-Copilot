@@ -10,7 +10,7 @@ const DecisionSummaryCard = ({
   const getSignalColor = () => {
     switch (signal.toUpperCase()) {
       case 'BUY':
-        return 'text-green-500';
+        return 'text-green-600';
       case 'SELL':
         return 'text-red-500';
       default:
@@ -19,7 +19,7 @@ const DecisionSummaryCard = ({
   };
 
   const getReturnColor = () => {
-    return expectedReturn >= 0 ? 'text-green-500' : 'text-red-500';
+    return expectedReturn >= 0 ? 'text-green-600' : 'text-red-500';
   };
 
   const formatTrend = () => {
@@ -48,7 +48,7 @@ const DecisionSummaryCard = ({
   const confidencePct = `${Math.round(confidence * 100)}%`;
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-md">
+    <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
       <div className="mx-auto max-w-lg text-center">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-gray-500">Decision</p>
         <h2 className={`mt-2 text-6xl font-semibold leading-none ${getSignalColor()}`}>{signal.toUpperCase()}</h2>
@@ -65,7 +65,7 @@ const DecisionSummaryCard = ({
           </div>
         </div>
 
-        <button className="mt-8 rounded-xl bg-gray-900 px-6 py-3 text-sm font-medium text-white">
+        <button className="mt-8 cursor-pointer rounded-2xl bg-gray-900 px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-black hover:scale-[1.03] active:scale-[0.97]">
           {getActionText()}
         </button>
 

@@ -41,8 +41,8 @@ const Dashboard = () => {
   const trendRaw = stockData?.prediction?.trend?.toUpperCase() || 'SIDEWAYS';
   const trend = trendRaw === 'UP' ? 'Uptrend' : trendRaw === 'DOWN' ? 'Downtrend' : 'Sideways';
 
-  const signalColor = signal === 'BUY' ? 'text-green-500' : signal === 'SELL' ? 'text-red-500' : 'text-gray-400';
-  const returnColor = expectedReturn >= 0 ? 'text-green-500' : 'text-red-500';
+  const signalColor = signal === 'BUY' ? 'text-green-600' : signal === 'SELL' ? 'text-red-500' : 'text-gray-400';
+  const returnColor = expectedReturn >= 0 ? 'text-green-600' : 'text-red-500';
   const ctaLabel = signal === 'BUY' ? 'Enter Position' : signal === 'SELL' ? 'Reduce Exposure' : 'Hold Position';
 
   useEffect(() => {
@@ -69,10 +69,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto space-y-12 px-6 py-6">
-        <header className="space-y-6 text-center">
+        <header className="space-y-4 text-center">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">AI Trading Dashboard</h1>
-            <p className="mt-2 text-gray-500">Premium market intelligence in a clean, focused workspace.</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">AI Trading Dashboard</h1>
+            <p className="mt-2 text-sm text-gray-500">Premium market intelligence in a clean, focused workspace.</p>
           </div>
           <div className="mx-auto max-w-2xl">
             <SearchBar onSearch={handleSearch} loading={loading} />
@@ -80,13 +80,13 @@ const Dashboard = () => {
         </header>
 
         {error && (
-          <div className="mt-10 rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+          <div className="mt-10 rounded-2xl bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
             <p className="text-red-600">{error}</p>
           </div>
         )}
 
         <div className="mt-10 grid grid-cols-1 gap-8 xl:grid-cols-12">
-          <div className="xl:col-span-8 space-y-10">
+          <div className="xl:col-span-8 space-y-12">
             {loading && !stockData ? (
               <div className="animate-pulse space-y-4 rounded-2xl bg-white p-6 shadow-sm">
                 <div className="h-6 w-1/3 rounded bg-gray-200"></div>
@@ -94,7 +94,7 @@ const Dashboard = () => {
               </div>
             ) : stockData ? (
               <>
-                <section className="mx-auto max-w-xl cursor-pointer rounded-3xl bg-white p-10 text-center shadow-lg animate-fade-in-up transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1">
+                <section className="mx-auto max-w-xl cursor-pointer rounded-3xl bg-white p-8 text-center shadow-sm animate-fade-in-up transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
                   <p className="text-sm font-medium uppercase tracking-[0.24em] text-gray-500">Decision</p>
                   <h2 className={`mt-3 text-5xl font-semibold ${signalColor}`}>{signal}</h2>
                   <p className={`mt-4 text-3xl font-semibold ${returnColor}`}>
@@ -111,12 +111,12 @@ const Dashboard = () => {
                     </span>
                   </div>
 
-                  <button className="mt-8 cursor-pointer px-6 py-3 rounded-2xl bg-gray-900 text-white transition-all duration-300 hover:bg-black hover:scale-105 active:scale-95">
+                  <button className="mt-8 cursor-pointer px-6 py-3 rounded-2xl bg-gray-900 text-white text-sm font-medium transition-all duration-200 hover:bg-black hover:scale-[1.03] active:scale-[0.97]">
                     {ctaLabel}
                   </button>
                 </section>
 
-                <section className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 animate-fade-in">
+                <section className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px] animate-fade-in">
                   <PriceChart
                     historicalData={stockData.historical_data}
                     indicators={stockData.indicators}
@@ -126,35 +126,35 @@ const Dashboard = () => {
                 </section>
 
                 <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                  <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+                  <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
                     <RSIChart
                       historicalData={stockData.historical_data}
                       indicators={stockData.indicators}
                     />
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+                  <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
                     <ProbabilityBar probabilities={stockData.probabilities} />
                   </div>
                 </section>
               </>
             ) : (
-              <div className="rounded-2xl bg-white p-12 text-center shadow-sm transition-all duration-300 ease-out">
+              <div className="rounded-2xl bg-white p-8 text-center shadow-sm transition-all duration-200 ease-out">
                 <p className="text-xl font-medium text-gray-900">No stock selected</p>
-                <p className="mt-2 text-gray-500">Search for a symbol to load your dashboard.</p>
+                <p className="mt-2 text-sm text-gray-500">Search for a symbol to load your dashboard.</p>
               </div>
             )}
           </div>
 
           <aside className="xl:col-span-4 space-y-8">
             {stockData?.ai_explanation && (
-              <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+              <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
                 <AIExplanationCard explanation={stockData.ai_explanation} />
               </div>
             )}
-            <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+            <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
               <AlertsPanel />
             </div>
-            <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
+            <div className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
               <CopilotChat selectedStock={selectedStock} />
             </div>
           </aside>

@@ -15,8 +15,8 @@ import BacktestResults from './BacktestResults';
 const PriceChart = ({ historicalData, indicators, futurePredictions, backtest }) => {
   if (!historicalData || historicalData.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-        <h3 className="mb-4 text-xl font-semibold text-gray-900">Price Forecast</h3>
+      <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+        <h3 className="mb-4 text-lg font-medium text-gray-800">Price Forecast</h3>
         <div className="flex h-64 items-center justify-center text-gray-500">
           No price data available
         </div>
@@ -137,8 +137,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
   };
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-      <h3 className="mb-6 text-2xl font-semibold text-gray-900">Price Forecast (Next 15 Steps)</h3>
+    <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+      <h3 className="mb-6 text-lg font-medium text-gray-800">Price Forecast (Next 15 Steps)</h3>
       <ResponsiveContainer width="100%" height={340}>
         <ComposedChart data={chartWithTrades}>
           <CartesianGrid strokeDasharray="4 6" stroke="#E5E7EB" />

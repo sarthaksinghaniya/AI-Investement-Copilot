@@ -69,9 +69,9 @@ const AlertsPanel = () => {
   const getSignalIcon = (signal) => {
     switch (signal?.toUpperCase()) {
       case 'BUY':
-        return <TrendingUp className="h-4 w-4 text-green-500" />;
+        return <TrendingUp className="h-4 w-4 text-gray-400" />;
       case 'SELL':
-        return <TrendingDown className="h-4 w-4 text-red-500" />;
+        return <TrendingDown className="h-4 w-4 text-gray-400" />;
       case 'WATCH':
         return <Eye className="h-4 w-4 text-gray-400" />;
       default:
@@ -95,7 +95,7 @@ const AlertsPanel = () => {
   const getSignalTextColor = (signal) => {
     switch (signal?.toUpperCase()) {
       case 'BUY':
-        return 'text-green-500';
+        return 'text-green-600';
       case 'SELL':
         return 'text-red-500';
       case 'WATCH':
@@ -107,10 +107,10 @@ const AlertsPanel = () => {
 
   if (loading && alerts.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-        <div className="flex items-center space-x-2 mb-4">
-          <AlertTriangle className="h-5 w-5 text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Market Alerts</h3>
+      <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+        <div className="mb-4 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-800">Market Alerts</h3>
         </div>
         <div className="flex items-center justify-center h-32 text-gray-500">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -121,10 +121,10 @@ const AlertsPanel = () => {
 
   if (error && alerts.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-        <div className="flex items-center space-x-2 mb-4">
-          <AlertTriangle className="h-5 w-5 text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Market Alerts</h3>
+      <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+        <div className="mb-4 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-800">Market Alerts</h3>
         </div>
         <div className="flex items-center justify-center h-32 text-gray-500">
           <p className="text-sm text-gray-500">No alerts available</p>
@@ -134,28 +134,26 @@ const AlertsPanel = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="h-5 w-5 text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Market Alerts</h3>
+    <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-800">Market Alerts</h3>
         </div>
         <span className="text-sm text-gray-500">
           {alerts.length} {alerts.length === 1 ? 'alert' : 'alerts'}
         </span>
       </div>
 
-      <div className="border-t border-gray-100 mb-4"></div>
-
       {alerts.length > 0 ? (
-        <div className="space-y-3 max-h-80 overflow-y-auto">
+        <div className="max-h-80 space-y-3 overflow-y-auto">
           {alerts.map((alert, index) => (
             <div
               key={alert.symbol ? `${alert.symbol}-${index}` : index}
-              className={`p-3 rounded-xl ${getSignalColor(alert.signal)} transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer`}
+              className={`cursor-pointer rounded-xl p-3 ${getSignalColor(alert.signal)} transition-all duration-200 hover:scale-[1.02] hover:shadow-md`}
             >
               <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   {getSignalIcon(alert.signal)}
                   <span className="font-semibold text-gray-900">
                     {alert.symbol || 'Unknown'}
@@ -196,7 +194,7 @@ const AlertsPanel = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center text-gray-500 py-8">
+        <div className="py-8 text-center text-gray-500">
           <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
           <p>No strong signals detected</p>
           <p className="text-sm mt-1">Check back later for market alerts</p>

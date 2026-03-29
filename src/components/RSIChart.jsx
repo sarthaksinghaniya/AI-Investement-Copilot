@@ -46,8 +46,8 @@ const RSIChart = ({ historicalData, indicators }) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI Chart</h3>
+      <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+        <h3 className="mb-4 text-lg font-medium text-gray-800">RSI Chart</h3>
         <div className="flex h-64 items-center justify-center text-gray-500">
           No RSI data available
         </div>
@@ -70,8 +70,8 @@ const RSIChart = ({ historicalData, indicators }) => {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI (Relative Strength Index)</h3>
+    <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+      <h3 className="mb-4 text-lg font-medium text-gray-800">RSI (Relative Strength Index)</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="4 6" stroke="#E5E7EB" />
@@ -135,7 +135,7 @@ const RSIChart = ({ historicalData, indicators }) => {
           <span>Neutral (30-70)</span>
         </div>
         <div className="flex items-center">
-          <div className="mr-2 h-3 w-3 rounded-full bg-green-500"></div>
+          <div className="mr-2 h-3 w-3 rounded-full bg-green-600"></div>
           <span>Oversold (&lt;30)</span>
         </div>
       </div>

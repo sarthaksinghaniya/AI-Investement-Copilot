@@ -17,28 +17,28 @@ const BacktestResults = ({ backtest }) => {
   const isProfit = profit > 0;
 
   return (
-    <div className="rounded-2xl bg-gray-50 p-6 shadow-sm">
-      <h3 className="mb-6 text-xl font-semibold text-gray-900">Portfolio Simulation</h3>
+    <div className="rounded-2xl bg-gray-50 p-6 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[2px]">
+      <h3 className="mb-6 text-lg font-medium text-gray-800">Portfolio Simulation</h3>
       
       {/* Profit Summary */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-xl bg-white p-4">
           <p className="mb-1 text-sm text-gray-500">Total Profit</p>
-          <p className={`text-3xl font-bold ${isProfit ? 'text-green-500' : 'text-red-500'}`}>
+          <p className={`text-3xl font-semibold ${isProfit ? 'text-green-600' : 'text-red-500'}`}>
             {isProfit ? '+' : ''}₹{profit.toLocaleString()}
           </p>
         </div>
         
         <div className="rounded-xl bg-white p-4">
           <p className="mb-1 text-sm text-gray-500">Return %</p>
-          <p className={`text-3xl font-bold ${isProfit ? 'text-green-500' : 'text-red-500'}`}>
+          <p className={`text-3xl font-semibold ${isProfit ? 'text-green-600' : 'text-red-500'}`}>
             {isProfit ? '+' : ''}{return_pct}%
           </p>
         </div>
         
         <div className="rounded-xl bg-white p-4">
           <p className="mb-1 text-sm text-gray-500">Win Rate</p>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-3xl font-semibold text-blue-600">
             {win_rate}%
           </p>
         </div>
@@ -64,7 +64,7 @@ const BacktestResults = ({ backtest }) => {
       {/* Recent Trades */}
       {trades && trades.length > 0 && (
         <div>
-          <h4 className="mb-3 text-lg font-semibold text-gray-900">Recent Trades</h4>
+          <h4 className="mb-3 text-lg font-medium text-gray-800">Recent Trades</h4>
           <div className="max-h-48 space-y-2 overflow-y-auto">
             {trades.slice(-5).map((trade, index) => (
               <div 
@@ -73,9 +73,9 @@ const BacktestResults = ({ backtest }) => {
                   trade.type === 'BUY' ? 'bg-green-50' : 'bg-red-50'
                 }`}
               >
-                <div className="flex items-center space-x-3">
-                  <span className={`text-sm font-bold ${
-                    trade.type === 'BUY' ? 'text-green-500' : 'text-red-500'
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold ${
+                    trade.type === 'BUY' ? 'text-green-600' : 'text-red-500'
                   }`}>
                     {trade.type}
                   </span>
@@ -89,7 +89,7 @@ const BacktestResults = ({ backtest }) => {
                   </p>
                   {trade.profit_pct !== undefined && (
                     <p className={`text-xs ${
-                      trade.profit_pct > 0 ? 'text-green-500' : 'text-red-500'
+                      trade.profit_pct > 0 ? 'text-green-600' : 'text-red-500'
                     }`}>
                       {trade.profit_pct > 0 ? '+' : ''}{trade.profit_pct.toFixed(2)}%
                     </p>

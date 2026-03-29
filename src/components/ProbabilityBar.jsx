@@ -3,7 +3,7 @@ import React from 'react';
 const ProbabilityBar = ({ probabilities }) => {
   if (!probabilities) {
     return (
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">Signals</h3>
         <div className="flex h-32 items-center justify-center text-gray-500">
           No probability data available
@@ -66,7 +66,7 @@ const ProbabilityBar = ({ probabilities }) => {
                         maxProbability === sellProbability ? 'SELL' : 'WATCH';
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm">
+    <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Signals</h3>
         {maxProbability > 0.5 && (

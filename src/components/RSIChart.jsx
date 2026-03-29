@@ -46,7 +46,7 @@ const RSIChart = ({ historicalData, indicators }) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI Chart</h3>
         <div className="flex h-64 items-center justify-center text-gray-500">
           No RSI data available
@@ -70,7 +70,7 @@ const RSIChart = ({ historicalData, indicators }) => {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm">
+    <div className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
       <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI (Relative Strength Index)</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={chartData}>

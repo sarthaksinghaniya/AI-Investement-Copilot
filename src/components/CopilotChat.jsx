@@ -65,7 +65,7 @@ const CopilotChat = ({ selectedStock }) => {
   };
 
   return (
-    <div className="flex h-[760px] flex-col rounded-2xl bg-white p-0 shadow-md">
+    <div className="flex h-[760px] flex-col rounded-2xl bg-white p-0 shadow-sm cursor-pointer transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1">
       <div className="border-b border-gray-100 p-6">
         <div className="flex items-center space-x-2">
           <Bot className="h-5 w-5 text-blue-600" />
@@ -100,7 +100,7 @@ const CopilotChat = ({ selectedStock }) => {
               )}
               
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg transition-all duration-300 ease-out ${
                   message.type === 'user'
                     ? 'bg-blue-600 text-white'
                     : message.type === 'error'
@@ -146,12 +146,12 @@ const CopilotChat = ({ selectedStock }) => {
             onKeyPress={handleKeyPress}
             placeholder={selectedStock ? `Ask about ${selectedStock}...` : 'Select a stock to start chatting...'}
             disabled={!selectedStock || isLoading}
-            className="flex-1 rounded-xl bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-xl bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!input.trim() || !selectedStock || isLoading}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="cursor-pointer px-6 py-3 rounded-2xl bg-gray-900 text-white transition-all duration-300 hover:bg-black hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <Send className="h-4 w-4" />
           </button>

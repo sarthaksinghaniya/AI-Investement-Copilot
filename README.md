@@ -61,6 +61,7 @@ Backend/
 2. **Start the development server**
    ```bash
    npm run dev
+   uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
    ```
 
 3. **Build for production**

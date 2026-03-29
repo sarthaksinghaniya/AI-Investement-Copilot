@@ -65,23 +65,23 @@ const CopilotChat = ({ selectedStock }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg border border-gray-700 flex flex-col h-96">
-      <div className="p-4 border-b border-gray-700">
+    <div className="flex h-[760px] flex-col rounded-2xl bg-white p-0 shadow-md">
+      <div className="border-b border-gray-100 p-6">
         <div className="flex items-center space-x-2">
-          <Bot className="h-5 w-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">AI Copilot</h3>
+          <Bot className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">AI Copilot</h3>
           {selectedStock && (
-            <span className="text-sm text-gray-400 ml-auto">
+            <span className="ml-auto text-sm text-gray-500">
               Analyzing: {selectedStock}
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 space-y-3 overflow-y-auto p-6">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            <Bot className="h-12 w-12 mx-auto mb-3 text-gray-600" />
+          <div className="py-8 text-center text-gray-500">
+            <Bot className="mx-auto mb-3 h-12 w-12 text-gray-300" />
             <p>Ask me anything about this stock!</p>
             <p className="text-sm mt-1">I can help with analysis, trends, and insights.</p>
           </div>
@@ -95,7 +95,7 @@ const CopilotChat = ({ selectedStock }) => {
             >
               {message.type === 'ai' && (
                 <div className="flex-shrink-0">
-                  <Bot className="h-6 w-6 text-blue-400" />
+                  <Bot className="h-6 w-6 text-blue-600" />
                 </div>
               )}
               
@@ -104,8 +104,8 @@ const CopilotChat = ({ selectedStock }) => {
                   message.type === 'user'
                     ? 'bg-blue-600 text-white'
                     : message.type === 'error'
-                    ? 'bg-red-900 text-red-200'
-                    : 'bg-gray-700 text-gray-200'
+                    ? 'bg-red-50 text-red-600'
+                    : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -123,12 +123,12 @@ const CopilotChat = ({ selectedStock }) => {
         
         {isLoading && (
           <div className="flex items-start space-x-2 justify-start">
-            <Bot className="h-6 w-6 text-blue-400" />
-            <div className="bg-gray-700 text-gray-200 px-4 py-2 rounded-lg">
+            <Bot className="h-6 w-6 text-blue-600" />
+            <div className="rounded-lg bg-gray-100 px-4 py-2 text-gray-600">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: '0.1s' }}></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>
@@ -137,7 +137,7 @@ const CopilotChat = ({ selectedStock }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
+      <form onSubmit={handleSubmit} className="border-t border-gray-100 p-6">
         <div className="flex space-x-2">
           <input
             type="text"
@@ -146,12 +146,12 @@ const CopilotChat = ({ selectedStock }) => {
             onKeyPress={handleKeyPress}
             placeholder={selectedStock ? `Ask about ${selectedStock}...` : 'Select a stock to start chatting...'}
             disabled={!selectedStock || isLoading}
-            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-xl bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!input.trim() || !selectedStock || isLoading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <Send className="h-4 w-4" />
           </button>

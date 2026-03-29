@@ -3,9 +3,9 @@ import React from 'react';
 const ProbabilityBar = ({ probabilities }) => {
   if (!probabilities) {
     return (
-      <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Signal Probabilities</h3>
-        <div className="flex items-center justify-center h-32 text-gray-400">
+      <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Signals</h3>
+        <div className="flex h-32 items-center justify-center text-gray-500">
           No probability data available
         </div>
       </div>
@@ -23,7 +23,7 @@ const ProbabilityBar = ({ probabilities }) => {
       case 'SELL':
         return 'bg-red-500';
       case 'WATCH':
-        return 'bg-yellow-500';
+        return 'bg-gray-400';
       default:
         return 'bg-gray-500';
     }
@@ -32,11 +32,11 @@ const ProbabilityBar = ({ probabilities }) => {
   const getTextColor = (signal) => {
     switch (signal) {
       case 'BUY':
-        return 'text-green-400';
+        return 'text-green-500';
       case 'SELL':
-        return 'text-red-400';
+        return 'text-red-500';
       case 'WATCH':
-        return 'text-yellow-400';
+        return 'text-gray-400';
       default:
         return 'text-gray-400';
     }
@@ -44,17 +44,17 @@ const ProbabilityBar = ({ probabilities }) => {
 
   const ProbabilityBarRow = ({ label, probability, signal }) => (
     <div className="mb-4">
-      <div className="flex justify-between items-center mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <span className={`font-medium ${getTextColor(signal)}`}>
           {signal}
         </span>
-        <span className="text-white font-semibold">
+        <span className="font-semibold text-gray-900">
           {(probability * 100).toFixed(1)}%
         </span>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+      <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
         <div
-          className={`h-full ${getBarColor(signal)} transition-all duration-500 ease-out rounded-full`}
+          className={`h-full rounded-full ${getBarColor(signal)} transition-all duration-500 ease-out`}
           style={{ width: `${probability * 100}%` }}
         />
       </div>
@@ -66,11 +66,11 @@ const ProbabilityBar = ({ probabilities }) => {
                         maxProbability === sellProbability ? 'SELL' : 'WATCH';
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Signal Probabilities</h3>
+    <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Signals</h3>
         {maxProbability > 0.5 && (
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getBarColor(dominantSignal)} text-white`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-medium text-white ${getBarColor(dominantSignal)}`}>
             Strong {dominantSignal}
           </span>
         )}
@@ -95,10 +95,10 @@ const ProbabilityBar = ({ probabilities }) => {
       </div>
 
       {(buyProbability + sellProbability + watchProbability) > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-700">
+        <div className="mt-6 border-t border-gray-100 pt-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Confidence Level</span>
-            <span className={`font-medium ${maxProbability > 0.7 ? 'text-green-400' : maxProbability > 0.5 ? 'text-yellow-400' : 'text-gray-400'}`}>
+            <span className="text-gray-500">Confidence Level</span>
+            <span className={`font-medium ${maxProbability > 0.7 ? 'text-green-500' : maxProbability > 0.5 ? 'text-blue-600' : 'text-gray-400'}`}>
               {maxProbability > 0.7 ? 'High' : maxProbability > 0.5 ? 'Medium' : 'Low'}
             </span>
           </div>

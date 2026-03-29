@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -10,18 +9,15 @@ import {
   ResponsiveContainer,
   Area,
   ComposedChart,
-  AreaChart,
-  ReferenceLine,
-  Cell
 } from 'recharts';
 import BacktestResults from './BacktestResults';
 
 const PriceChart = ({ historicalData, indicators, futurePredictions, backtest }) => {
   if (!historicalData || historicalData.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Price Forecast (Next 15 Steps)</h3>
-        <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="rounded-2xl bg-white p-8 shadow-md">
+        <h3 className="mb-4 text-xl font-semibold text-gray-900">Price Forecast</h3>
+        <div className="flex h-64 items-center justify-center text-gray-500">
           No price data available
         </div>
       </div>
@@ -65,30 +61,25 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
   const fallbackSma20 = safeNumber(indicators?.sma_20 ?? indicators?.SMA_20);
   const fallbackSma50 = safeNumber(indicators?.sma_50 ?? indicators?.SMA_50);
 
-  const normalizedChartData = mergedChartData.map((item) => ({
-    ...item,
-    ema10: item.ema10 ?? fallbackEma10,
-    ema20: item.ema20 ?? fallbackEma20,
-    sma20: item.sma20 ?? fallbackSma20,
-    sma50: item.sma50 ?? fallbackSma50,
-  }));
-
   // Add trade markers from backtest
   const tradeMarkers = backtest?.trades || [];
   const chartWithTrades = mergedChartData.map((item, index) => {
     const trade = tradeMarkers.find(t => t.step === index);
     return {
       ...item,
+      ema10: item.ema10 ?? fallbackEma10,
+      ema20: item.ema20 ?? fallbackEma20,
+      sma20: item.sma20 ?? fallbackSma20,
+      sma50: item.sma50 ?? fallbackSma50,
       tradeMarker: trade ? trade.type : null
     };
   });
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const predictedData = payload.find(p => p.name === 'Future Prediction');
       return (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium mb-2">{label}</p>
+        <div className="rounded-xl bg-white p-3 shadow-md">
+          <p className="mb-2 text-sm font-medium text-gray-900">{label}</p>
           {payload.map((entry, index) => {
             if (entry.name === 'Future Prediction' && entry.payload.upperBound) {
               return (
@@ -96,17 +87,17 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
                   <p className="text-sm font-semibold" style={{ color: entry.color }}>
                     Predicted Price: ${entry.value ? entry.value.toFixed(2) : 'N/A'}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     Range: ${entry.payload.lowerBound?.toFixed(2)} - ${entry.payload.upperBound?.toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     ±2% Confidence Range
                   </p>
                 </div>
               );
             }
             return (
-              <p key={index} className="text-sm mb-1" style={{ color: entry.color }}>
+              <p key={index} className="mb-1 text-sm" style={{ color: entry.color }}>
                 {entry.name}: ${entry.value ? entry.value.toFixed(2) : 'N/A'}
               </p>
             );
@@ -126,14 +117,14 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
             cx={cx} 
             cy={cy} 
             r={6} 
-            fill={payload.tradeMarker === 'BUY' ? '#3B82F6' : '#EF4444'}
-            stroke="#fff"
+            fill={payload.tradeMarker === 'BUY' ? '#22C55E' : '#EF4444'}
+            stroke="#F9FAFB"
             strokeWidth={2}
           />
           <text 
             x={cx} 
             y={cy - 10} 
-            fill="#fff" 
+            fill="#111827" 
             fontSize={10} 
             textAnchor="middle"
           >
@@ -146,24 +137,24 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
   };
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-      <h3 className="text-lg font-semibold text-white mb-4">Price Forecast (Next 15 Steps)</h3>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="rounded-2xl bg-white p-8 shadow-md">
+      <h3 className="mb-6 text-2xl font-semibold text-gray-900">Price Forecast (Next 15 Steps)</h3>
+      <ResponsiveContainer width="100%" height={340}>
         <ComposedChart data={chartWithTrades}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <CartesianGrid strokeDasharray="4 6" stroke="#E5E7EB" />
           <XAxis 
             dataKey="date" 
             stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+            tick={{ fill: '#6B7280', fontSize: 12 }}
           />
           <YAxis 
             stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+            tick={{ fill: '#6B7280', fontSize: 12 }}
             domain={['dataMin - 5', 'dataMax + 5']}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
-            wrapperStyle={{ color: '#9CA3AF' }}
+            wrapperStyle={{ color: '#6B7280' }}
             iconType="line"
           />
           
@@ -173,8 +164,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
               type="monotone"
               dataKey="upperBound"
               stroke="none"
-              fill="#ff7300"
-              fillOpacity={0.1}
+              fill="#3B82F6"
+              fillOpacity={0.08}
               name="Upper Confidence"
             />
           )}
@@ -183,8 +174,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
               type="monotone"
               dataKey="lowerBound"
               stroke="none"
-              fill="#ff7300"
-              fillOpacity={0.2}
+              fill="#3B82F6"
+              fillOpacity={0.15}
               name="Lower Confidence"
             />
           )}
@@ -193,8 +184,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
           <Line
             type="monotone"
             dataKey="close"
-            stroke="#FFFFFF"
-            strokeWidth={2}
+            stroke="#111827"
+            strokeWidth={2.5}
             dot={false}
             name="Actual Price"
           />
@@ -202,7 +193,7 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
             type="monotone"
             dataKey="ema10"
             stroke="#3B82F6"
-            strokeWidth={1.5}
+            strokeWidth={1.8}
             dot={false}
             name="EMA 10"
             connectNulls={false}
@@ -210,8 +201,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
           <Line
             type="monotone"
             dataKey="ema20"
-            stroke="#10B981"
-            strokeWidth={1.5}
+            stroke="#34D399"
+            strokeWidth={1.8}
             dot={false}
             name="EMA 20"
             connectNulls={false}
@@ -219,8 +210,8 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
           <Line
             type="monotone"
             dataKey="sma20"
-            stroke="#F59E0B"
-            strokeWidth={1.5}
+            stroke="#60A5FA"
+            strokeWidth={1.8}
             dot={false}
             name="SMA 20"
             connectNulls={false}
@@ -230,9 +221,9 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
           <Line
             type="monotone"
             dataKey="predicted"
-            stroke="#ff7300"
+            stroke="#2563EB"
             strokeDasharray="5 5"
-            strokeWidth={2}
+            strokeWidth={2.2}
             dot={<CustomDot />}
             name="Future Prediction"
             connectNulls={false}
@@ -241,7 +232,11 @@ const PriceChart = ({ historicalData, indicators, futurePredictions, backtest })
       </ResponsiveContainer>
       
       {/* Backtest Results */}
-      {backtest && <BacktestResults backtest={backtest} />}
+      {backtest && (
+        <div className="mt-6">
+          <BacktestResults backtest={backtest} />
+        </div>
+      )}
     </div>
   );
 };

@@ -1,131 +1,77 @@
 import React from 'react';
 
-const DecisionSummaryCard = ({ 
-  signal = 'WATCH', 
-  expectedReturn = 0, 
-  confidence = 0, 
+const DecisionSummaryCard = ({
+  signal = 'WATCH',
+  expectedReturn = 0,
+  confidence = 0,
   backtest = null,
   trend = 'SIDEWAYS'
 }) => {
-  // Color coding based on signal
   const getSignalColor = () => {
     switch (signal.toUpperCase()) {
-      case 'BUY': return 'text-green-400';
-      case 'SELL': return 'text-red-400';
-      default: return 'text-yellow-400';
-    }
-  };
-
-  const getSignalBg = () => {
-    switch (signal.toUpperCase()) {
-      case 'BUY': return 'bg-green-900/20 border-green-600';
-      case 'SELL': return 'bg-red-900/20 border-red-600';
-      default: return 'bg-yellow-900/20 border-yellow-600';
+      case 'BUY':
+        return 'text-green-500';
+      case 'SELL':
+        return 'text-red-500';
+      default:
+        return 'text-gray-400';
     }
   };
 
   const getReturnColor = () => {
-    return expectedReturn >= 0 ? 'text-green-400' : 'text-red-400';
+    return expectedReturn >= 0 ? 'text-green-500' : 'text-red-500';
   };
 
-  const getTrendIcon = () => {
-    switch (trend.toUpperCase()) {
-      case 'UP': return '📈';
-      case 'DOWN': return '📉';
-      default: return '➡️';
-    }
+  const formatTrend = () => {
+    if (!trend) return 'Sideways';
+    const value = trend.toString().toUpperCase();
+    if (value === 'UP') return 'Uptrend';
+    if (value === 'DOWN') return 'Downtrend';
+    return 'Sideways';
   };
 
-  const getTrendColor = () => {
-    switch (trend.toUpperCase()) {
-      case 'UP': return 'text-green-400';
-      case 'DOWN': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
+  const getActionText = () => {
+    const value = signal.toUpperCase();
+    if (value === 'BUY') return 'Enter Position';
+    if (value === 'SELL') return 'Trim Position';
+    return 'Hold Position';
   };
 
-  // Format backtest result
-  const getBacktestDisplay = () => {
-    if (!backtest || !backtest.final_value) return 'No backtest data';
-    
-    const { final_value = 100000, return_pct = 0 } = backtest;
-    const returnColor = return_pct >= 0 ? 'text-green-400' : 'text-red-400';
-    const returnSign = return_pct >= 0 ? '+' : '';
-    
-    return (
-      <span className={returnColor}>
-        ₹100K → ₹{final_value.toLocaleString()} ({returnSign}{return_pct}%)
-      </span>
-    );
+  const backtestSummary = () => {
+    if (!backtest || !backtest.return_pct) return null;
+    const pct = Number(backtest.return_pct);
+    if (!Number.isFinite(pct)) return null;
+    return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% backtest`;
   };
+
+  const formattedReturn = `${expectedReturn >= 0 ? '+' : ''}${Number(expectedReturn).toFixed(1)}%`;
+  const confidencePct = `${Math.round(confidence * 100)}%`;
 
   return (
-    <div className="flex justify-center items-center min-h-[200px] p-6">
-      <div className={`bg-gray-800 rounded-2xl shadow-2xl p-8 border-2 max-w-md w-full ${getSignalBg()}`}>
-        {/* Main Signal */}
-        <div className="text-center mb-6">
-          <div className={`text-5xl font-bold mb-2 ${getSignalColor()}`}>
-            {signal.toUpperCase()}
+    <div className="rounded-2xl bg-white p-8 shadow-md">
+      <div className="mx-auto max-w-lg text-center">
+        <p className="text-sm font-medium uppercase tracking-[0.24em] text-gray-500">Decision</p>
+        <h2 className={`mt-2 text-6xl font-semibold leading-none ${getSignalColor()}`}>{signal.toUpperCase()}</h2>
+        <p className={`mt-3 text-3xl font-semibold ${getReturnColor()}`}>{formattedReturn}</p>
+
+        <div className="mt-8 grid grid-cols-2 gap-4 text-left">
+          <div className="rounded-xl bg-gray-50 p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Confidence</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900">{confidencePct}</p>
           </div>
-          <div className="text-sm text-gray-400 uppercase tracking-wider">
-            Trading Signal
+          <div className="rounded-xl bg-gray-50 p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Trend</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900">{formatTrend()}</p>
           </div>
         </div>
 
-        {/* Expected Return */}
-        <div className="text-center mb-4">
-          <div className={`text-3xl font-semibold ${getReturnColor()}`}>
-            {expectedReturn >= 0 ? '+' : ''}{expectedReturn.toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-400">
-            Expected Return
-          </div>
-        </div>
+        <button className="mt-8 rounded-xl bg-gray-900 px-6 py-3 text-sm font-medium text-white">
+          {getActionText()}
+        </button>
 
-        {/* Confidence */}
-        <div className="text-center mb-4">
-          <div className="text-2xl font-semibold text-blue-400">
-            {Math.round(confidence * 100)}%
-          </div>
-          <div className="text-sm text-gray-400">
-            Confidence
-          </div>
-        </div>
-
-        {/* Backtest Result */}
-        <div className="text-center mb-4">
-          <div className="text-lg font-medium">
-            {getBacktestDisplay()}
-          </div>
-          <div className="text-sm text-gray-400">
-            Backtest Result
-          </div>
-        </div>
-
-        {/* Trend */}
-        <div className="text-center">
-          <div className={`text-2xl font-semibold flex items-center justify-center gap-2 ${getTrendColor()}`}>
-            <span>{trend.toUpperCase()}</span>
-            <span>{getTrendIcon()}</span>
-          </div>
-          <div className="text-sm text-gray-400">
-            15-Day Trend
-          </div>
-        </div>
-
-        {/* Action Indicator */}
-        <div className="mt-6 pt-4 border-t border-gray-700">
-          <div className="text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${getSignalBg()}`}>
-              <div className={`w-2 h-2 rounded-full ${getSignalColor().replace('text', 'bg')}`}></div>
-              <span className={`text-sm font-medium ${getSignalColor()}`}>
-                {signal.toUpperCase() === 'BUY' && 'Consider Buying'}
-                {signal.toUpperCase() === 'SELL' && 'Consider Selling'}
-                {signal.toUpperCase() === 'WATCH' && 'Hold Position'}
-              </span>
-            </div>
-          </div>
-        </div>
+        {backtestSummary() && (
+          <p className="mt-3 text-sm text-gray-500">{backtestSummary()}</p>
+        )}
       </div>
     </div>
   );

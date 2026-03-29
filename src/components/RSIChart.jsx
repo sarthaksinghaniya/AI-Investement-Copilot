@@ -46,9 +46,9 @@ const RSIChart = ({ historicalData, indicators }) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">RSI Chart</h3>
-        <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI Chart</h3>
+        <div className="flex h-64 items-center justify-center text-gray-500">
           No RSI data available
         </div>
       </div>
@@ -58,9 +58,9 @@ const RSIChart = ({ historicalData, indicators }) => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium">{label}</p>
-          <p className="text-sm text-purple-400">
+        <div className="rounded-xl bg-white p-3 shadow-md">
+          <p className="font-medium text-gray-900">{label}</p>
+          <p className="text-sm text-blue-600">
             RSI: {payload[0].value ? payload[0].value.toFixed(2) : 'N/A'}
           </p>
         </div>
@@ -70,19 +70,19 @@ const RSIChart = ({ historicalData, indicators }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-700">
-      <h3 className="text-lg font-semibold text-white mb-4">RSI (Relative Strength Index)</h3>
+    <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <h3 className="mb-4 text-lg font-semibold text-gray-900">RSI (Relative Strength Index)</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <CartesianGrid strokeDasharray="4 6" stroke="#E5E7EB" />
           <XAxis 
             dataKey="date" 
             stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+            tick={{ fill: '#6B7280', fontSize: 12 }}
           />
           <YAxis 
             stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+            tick={{ fill: '#6B7280', fontSize: 12 }}
             domain={[0, 100]}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -117,7 +117,7 @@ const RSIChart = ({ historicalData, indicators }) => {
           <Line
             type="monotone"
             dataKey="rsi"
-            stroke="#A855F7"
+            stroke="#2563EB"
             strokeWidth={2}
             dot={false}
             name="RSI"
@@ -125,17 +125,17 @@ const RSIChart = ({ historicalData, indicators }) => {
         </LineChart>
       </ResponsiveContainer>
       
-      <div className="mt-4 flex justify-between text-xs text-gray-400">
+      <div className="mt-4 flex justify-between text-xs text-gray-500">
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+          <div className="mr-2 h-3 w-3 rounded-full bg-red-500"></div>
           <span>Overbought (&gt;70)</span>
         </div>
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
+          <div className="mr-2 h-3 w-3 rounded-full bg-gray-400"></div>
           <span>Neutral (30-70)</span>
         </div>
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+          <div className="mr-2 h-3 w-3 rounded-full bg-green-500"></div>
           <span>Oversold (&lt;30)</span>
         </div>
       </div>
